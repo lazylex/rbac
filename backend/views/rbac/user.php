@@ -17,36 +17,39 @@ $this->params['breadcrumbs'][] = $this->title;
 $auth = \Yii::$app->authManager;
 $allPermissions = $auth->getPermissions();
 $allRoles = $auth->getRoles();
+$userPerm=$auth->getPermissionsByUser($user['id']);
 
 if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRole', ['roles' => $user['roles']])) {
     echo Html::tag('div', 'У Вас нет прав для редактирования данного пользователя');
     die;
 }
-/*
-foreach ($user['roles'] as $role) {
-    echo $role_name = $role['role'];
-    $childRoles = $auth->getChildRoles($role_name);
-    foreach ($childRoles as $childRole) {
-        // Чтобы не выводить собственую роль, как дочернюю
-        //if ($role_name != $childRole->name)
-         {
-            echo '<br>    ' . $childRole->name;
-            $role_permissions = $auth->getPermissionsByRole($childRole->name);
 
-            foreach ($role_permissions as $permission) {
-                echo '<br>        ' . $permission->name;
-            }
-        }
-    }
-
-
-}*/
-echo Html::beginTag('div',['class'=>'row']);
-echo Html::beginTag('div',['class'=>'col-2', 'style'=>'width: 1000px']);
 $tr=new backend\components\TreeBuilder\TreeBuilder();
 $tr->BuildTree($user['roles'][0]['role']);
-echo Html::endTag('div');
-echo Html::endTag('div');
-//echo '<pre>' . print_r($user['roles'], true) . '</pre>';
-//    echo '<pre>'.print_r($user['roles'],true).'</pre>';
-//echo '<pre>'.print_r($user['permissions'],true).'</pre>';
+echo $tr->buildList($tr->tree);
+
+
+
+
+echo Html::beginTag('table',['class'=>'table']);
+echo Html::tag('thead');
+echo Html::tag('th','');
+echo Html::tag('th','Название');
+echo Html::tag('th','Описание');
+echo Html::tag('th','Правило');
+foreach ($allPermissions as $permission)
+{
+    if ($permission->name=='changeAllRoles'&&!\Yii::$app->user->can('changeAllRoles'))
+        continue;
+        echo Html::beginTag('tr');
+        if ($permission->name == 'changeAllRoles')
+            echo Html::tag('td', Html::tag('input', '', ['type' => 'checkbox', 'checked' => in_array($permission, $userPerm), 'disabled' => true])) ;
+        else
+            echo Html::tag('td', Html::tag('input', '', ['type' => 'checkbox', 'checked' => in_array($permission, $userPerm)]));
+
+        echo Html::tag('td', $permission->name);
+        echo Html::tag('td', $permission->description);
+        echo Html::tag('td', $permission->ruleName);
+        echo Html::endTag('tr');
+
+}

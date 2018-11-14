@@ -104,4 +104,29 @@ class RbacController extends Controller
             return $this->render('users', ['users' => $users]);
         return 'Нет пользователей';
     }
+
+    public function actionNew()
+    {
+        $auth = \Yii::$app->authManager;
+        //$auth->removeAll();//сношу все отношения, существовавшие ранее
+        /* Создаю пользователей */
+
+        /* Создаю разрешение на создание ролей*/
+    /*    $createRole1 = $auth->createPermission('boy');
+        $createRole1->description = 'Ничего не может';
+        $auth->add($createRole1);*/
+
+
+        /* Создаю роль заместителя */
+        $role_deputy = $auth->createRole('Гарсон');
+        $role_deputy->description = 'Мальчик на побегушках';
+        $auth->add($role_deputy);
+
+        $auth->addChild($auth->getRole('Консильери'),$role_deputy);
+
+        $auth->addChild($role_deputy,$auth->getPermission('boy'));//даем заместителю разрешение на создание ролей
+
+
+        echo 'new';
+    }
 }
