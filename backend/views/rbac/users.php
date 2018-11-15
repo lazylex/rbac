@@ -3,18 +3,17 @@
 use yii\helpers\Html;
 
 $this->title = 'Пользователи';
+
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div>
-
-    <h1><?= Html::encode($this->title) ?></h1>
 
     <?php
     $status[\common\models\User::STATUS_ACTIVE] = Html::tag('span', 'Активен', ['class' => 'label label-success']);
     $status[\common\models\User::STATUS_DELETED] = Html::tag('span', 'Удален', ['class' => 'label label-danger']);
     //echo Html::beginTag('form',['action'=>'user','mathod'=>'post']);
     echo Html::beginTag('table', ['class' => 'table table-striped table-bordered table-hover']);
-    echo Html::beginTag('thead');
+    echo Html::beginTag('thead',['style'=>'background: gray']);
     echo Html::tag('th', 'ID', ['style' => 'text-align:center']);
     echo Html::tag('th', 'Статус', ['style' => 'text-align:center']);
     echo Html::tag('th', 'Имя пользователя', ['style' => 'text-align:center']);
@@ -23,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
     echo Html::tag('th', 'Создан', ['style' => 'text-align:center']);
     echo Html::tag('th', 'Редактировать', ['style' => 'text-align:center']);
     echo Html::endTag('thead');
-    echo Html::beginTag('tbody', ['class' => 'table-striped']);
+    echo Html::beginTag('tbody', ['style'=>'background: lightgray']);
     foreach ($users as $user) {
         $change_user;
 
@@ -31,11 +30,14 @@ $this->params['breadcrumbs'][] = $this->title;
         foreach ($user['roles'] as $role) {
             $roles .= Html::tag('li', $role);
         }
-        $roles == Html::tag('ul', $roles);
+       // $roles == Html::tag('ul', $roles);
 
         $permissions = '';
         foreach ($user['permissions'] as $permission) {
-            $permissions .= Html::tag('li', $permission);
+            //кроме главного никто не должен знать название разрешения на полный доступ к изменению ролей
+            if (($permission['name']=="changeAllRoles")&&(!\Yii::$app->user->can('changeAllRoles')))
+                continue;
+            $permissions .= Html::tag('li', $permission['name'].'<i> ('.$permission['description'].')</i>');
         }
         $permissions = Html::tag('ul', $permissions);
 

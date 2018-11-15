@@ -18,6 +18,8 @@ use yii\web\Controller;
 class RbacController extends Controller
 {
 
+    public $layout='rbac';
+
     public function behaviors()
     {
         return [
@@ -96,7 +98,9 @@ class RbacController extends Controller
             $permissions = \Yii::$app->authManager->getPermissionsByUser($user['id']);
 
             foreach ($permissions as $permission)
-                $user['permissions'][] = $permission->name . ' <i>(' . $permission->description . ')</i>';
+            {
+                $user['permissions'][] = ['name'=>$permission->name , 'description'=>$permission->description];
+            }
         }
 
 
@@ -118,13 +122,19 @@ class RbacController extends Controller
 
 
         /* Создаю роль заместителя */
-        $role_deputy = $auth->createRole('Гарсон');
-        $role_deputy->description = 'Мальчик на побегушках';
-        $auth->add($role_deputy);
+        //$role_deputy = $auth->createRole('Повелитель');
+        //$role_deputy->description = 'Самый главный человек';
+        //$auth->add($role_deputy);
 
-        $auth->addChild($auth->getRole('Консильери'),$role_deputy);
+        //$auth->addChild($auth->getRole('Консильери'),$role_deputy);
 
-        $auth->addChild($role_deputy,$auth->getPermission('boy'));//даем заместителю разрешение на создание ролей
+        //$auth->addChild($role_deputy,$auth->getPermission('boy'));//даем заместителю разрешение на создание ролей
+
+        $pizza=$auth->createPermission('pizza');
+        $pizza->description="Может заказывать на обед пиццу за счет фирмы";
+        $auth->add($pizza);
+
+$auth->assign($pizza,31);
 
 
         echo 'new';

@@ -19,25 +19,28 @@ class TreeBuilder
     /**
      * Построитель дерева
      * @param string $role имя роли, для которой необходимо построить дерево
+     * @param boolean $rebuild перестраивать ли таблицу с ролями и правами
      * @return Item
      */
-    public function BuildTree($role)
+    public function BuildTree($role, $rebuild = true)
     {
+        $this->tree=[];
         /* Заполняю массив ролей и прав */
-        $auth_items = AuthItem::find()->select(['name', 'type', 'rule_name', 'description'])->asArray()->all();
-        foreach ($auth_items as $auth_item) {
-            $this->auth_item[$auth_item['name']] =
-                [
-                    'type' => $auth_item['type'],
-                    'rule_name' => $auth_item['rule_name'],
-                    'description' => $auth_item['description']
-                ];
+        if ($rebuild) {
+            $auth_items = AuthItem::find()->select(['name', 'type', 'rule_name', 'description'])->asArray()->all();
+            foreach ($auth_items as $auth_item) {
+                $this->auth_item[$auth_item['name']] =
+                    [
+                        'type' => $auth_item['type'],
+                        'rule_name' => $auth_item['rule_name'],
+                        'description' => $auth_item['description']
+                    ];
+            }
         }
-
 
         //echo '<pre>' . print_r($this->auth_item, true) . '</pre>';
         //echo '<strong>'.$role.'</strong><br>';
-       // echo '<div style="border: solid 1px black">';
+        // echo '<div style="border: solid 1px black">';
         //$this->drawChildrenBranch($role, 0);
         $this->tree['roles'][$role] = $this->getChildrenRoles($role);
         //echo '</div>';
@@ -48,28 +51,25 @@ class TreeBuilder
     {
         $result = '';
 
-        $result.='<ul class="">';
+        $result .= '<ul class="" style="margin: 0">';
         if (isset($tree['permissions'])) {
-            //$result .= '<ul>';
             foreach ($tree['permissions'] as $perm) {
-
-                $result .= '<li class="list-group-item d-flex justify-content-between align-items-center list-group-item-info">'.'<span class="glyphicon glyphicon-lock"></span> '.$perm.' <span class="label label-info">'.$this->auth_item[$perm]['description'].'</span></li>';
+                $result .= '<li class="list-group-item list-group-item-info">'
+                    . '<span class="glyphicon glyphicon-lock"></span> '
+                    . $perm . ' <span class="label label-info">' . $this->auth_item[$perm]['description'] . '</span></li>';
             }
-            //$result .= '</ul>';
         }
 
-        if(isset($tree['roles']))
-        {
-
-
-            foreach ($tree['roles'] as $key=>$role) {
-                $result.='<li class="list-group-item d-flex justify-content-between align-items-center list-group-item-success"><span class="glyphicon glyphicon-user"></span> '.$key.' <span class="label label-success">'.$this->auth_item[$key]['description'].'</span></li>';
-                $result.=$this->buildList($role);
+        if (isset($tree['roles'])) {
+            foreach ($tree['roles'] as $key => $role) {
+                $result .= '<li class="list-group-item list-group-item-success">
+                        <span class="glyphicon glyphicon-user"></span> <a href="role?id='.$key.'">' . $key
+                    . '</a> <span class="label label-success">' . $this->auth_item[$key]['description'] . '</span></li>';
+                $result .= $this->buildList($role);
             }
 
         }
-        $result.='</ul>';
-
+        $result .= '</ul>';
 
         return $result;
     }
@@ -112,13 +112,13 @@ class TreeBuilder
         return ($this->auth_item[$name]['type'] == '2') ? true : false;
     }
 
-    private function levelColor($level)
+    /*private function levelColor($level)
     {
         $c = 255 - $level * 20 + 25;
         if ($c < 100)
             $c = 100;
         return "background: rgb({$c},{$c},{$c})";
-    }
+    }*/
 
     /**
      * Построитель дочерней ветки
@@ -126,6 +126,7 @@ class TreeBuilder
      * #papam int $level уровень вложености
      * @return Item
      */
+    /*
     private function drawChildrenBranch($role, $level)
     {
         $level++;
@@ -176,7 +177,7 @@ class TreeBuilder
 
         echo '</div>';
         echo '</div>';
-    }
+    }*/
 
     private function getChildren($role)
     {
