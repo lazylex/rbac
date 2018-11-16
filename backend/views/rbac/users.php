@@ -34,6 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
         $permissions = '';
         foreach ($user['permissions'] as $permission) {
+
             //кроме главного никто не должен знать название разрешения на полный доступ к изменению ролей
             if (($permission['name']=="changeAllRoles")&&(!\Yii::$app->user->can('changeAllRoles')))
                 continue;

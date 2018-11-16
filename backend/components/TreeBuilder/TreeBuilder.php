@@ -11,52 +11,59 @@ namespace backend\components\TreeBuilder;
 use backend\models\AuthItem;
 use backend\models\AuthItemChild;
 
+/**
+ * Class TreeBuilder
+ * @package backend\components\TreeBuilder
+ * @property array $auth_item таблица с ролями и правами, позволяет делать меньше запросов к БД
+ * @property array $tree массив ролей и разрешений
+ */
 class TreeBuilder
 {
-    private $auth_item;//будет храниться таблица с ролями и правами, чтобы делать меньше запросов к бд
-    public $tree = [];//массив ролей и разрешений
+    private $auth_item=[];
+    public $tree = [];
 
     /**
-     * Построитель дерева
-     * @param string $role имя роли, для которой необходимо построить дерево
-     * @param boolean $rebuild перестраивать ли таблицу с ролями и правами
-     * @return Item
+     * Конструктор, заполняет таблицу ролей и прав
      */
-    public function BuildTree($role, $rebuild = true)
+    public function __construct()
     {
-        $this->tree=[];
-        /* Заполняю массив ролей и прав */
-        if ($rebuild) {
-            $auth_items = AuthItem::find()->select(['name', 'type', 'rule_name', 'description'])->asArray()->all();
-            foreach ($auth_items as $auth_item) {
-                $this->auth_item[$auth_item['name']] =
-                    [
-                        'type' => $auth_item['type'],
-                        'rule_name' => $auth_item['rule_name'],
-                        'description' => $auth_item['description']
-                    ];
-            }
+        $auth_items = AuthItem::find()->select(['name', 'type', 'rule_name', 'description'])->asArray()->all();
+        foreach ($auth_items as $auth_item) {
+            $this->auth_item[$auth_item['name']] =
+                [
+                    'type' => $auth_item['type'],
+                    'rule_name' => $auth_item['rule_name'],
+                    'description' => $auth_item['description']
+                ];
         }
-
-        //echo '<pre>' . print_r($this->auth_item, true) . '</pre>';
-        //echo '<strong>'.$role.'</strong><br>';
-        // echo '<div style="border: solid 1px black">';
-        //$this->drawChildrenBranch($role, 0);
-        $this->tree['roles'][$role] = $this->getChildrenRoles($role);
-        //echo '</div>';
     }
 
+    /**
+     * Построитель дерева в виде массива
+     * @param string $role имя роли, для которой необходимо построить дерево
+     */
+    public function BuildTree($role)
+    {
+        $this->tree=[];
+        $this->tree['roles'][$role] = $this->getChildrenRoles($role);
+    }
 
+    /**
+     * Построитель дерева в виде списка, доступного для вывода на экран
+     * @param array $tree построенное функцией BuildTree дерево роль/потомки
+     * @return string список ролей и их разрешений в формате html
+     */
     public function buildList($tree)
     {
         $result = '';
 
         $result .= '<ul class="" style="margin: 0">';
         if (isset($tree['permissions'])) {
-            foreach ($tree['permissions'] as $perm) {
+            foreach ($tree['permissions'] as $key =>$perm) {
                 $result .= '<li class="list-group-item list-group-item-info">'
                     . '<span class="glyphicon glyphicon-lock"></span> '
-                    . $perm . ' <span class="label label-info">' . $this->auth_item[$perm]['description'] . '</span></li>';
+                    . $key . ' <span class="label label-info">' . $this->auth_item[$key]['description'] . '</span></li>';
+                $result .= $this->buildList($perm);
             }
         }
 
@@ -74,13 +81,17 @@ class TreeBuilder
         return $result;
     }
 
+    /**
+     * Рекурсивная функция поиска потомков
+     * @param string $role роль для которой необходимо найти потомков первого уровня
+     * @return array|null массив потомков первого уровня для заданной роли
+     */
     private function getChildrenRoles($role)
     {
-
         $children = $this->getChildren($role);
         $child_role = [];
         if (is_null($children)) {
-            return;
+            return null;
         }
 
         foreach ($children as $child) {
@@ -88,96 +99,26 @@ class TreeBuilder
                 $child_role['roles'][$child['child']] = $this->getChildrenRoles($child['child']);
             }
             if ($this->isPermission($child['child'])) {
-                $child_role['permissions'][] = $child['child'];
+                $child_role['permissions'][$child['child']] = $this->getChildrenRoles($child['child']);
             }
         }
-
-
-        //$child_role=$this->getChildrenRoles($role);
 
         return $child_role;
     }
 
-    private function isRole($name)
+    public function isRole($name)
     {
         if (!isset($this->auth_item[$name]))
             return false;
         return ($this->auth_item[$name]['type'] == '1') ? true : false;
     }
 
-    private function isPermission($name)
+    public function isPermission($name)
     {
         if (!isset($this->auth_item[$name]))
             return false;
         return ($this->auth_item[$name]['type'] == '2') ? true : false;
     }
-
-    /*private function levelColor($level)
-    {
-        $c = 255 - $level * 20 + 25;
-        if ($c < 100)
-            $c = 100;
-        return "background: rgb({$c},{$c},{$c})";
-    }*/
-
-    /**
-     * Построитель дочерней ветки
-     * @param string $role имя роли, для которой необходимо построить ветвь
-     * #papam int $level уровень вложености
-     * @return Item
-     */
-    /*
-    private function drawChildrenBranch($role, $level)
-    {
-        $level++;
-        $children = $this->getChildren($role);
-
-        if (is_null($children)) {
-            return;
-        }
-        $roles = [];
-        $permissions = [];
-        foreach ($children as $child) {
-            if ($this->isRole($child['child'])) {
-                $roles[] = $child['child'];
-
-            }
-            if ($this->isPermission($child['child'])) {
-                $permissions[] = $child['child'];
-            }
-        }
-
-        if ($level == 1) {
-            echo '<div class=""  style=" ">';
-            echo '<div class=""><strong style="padding: 3px">' . $role . '</strong></div>';
-        } else {
-            echo '<div class=""  style=" border-left: solid 1px darkgrey">';
-            echo '<div class=""><strong style="padding: 3px">' . $role . '</strong></div>';
-        }
-
-
-        echo '<div class="panel-body" style=" ' . $this->levelColor($level) . '; ">';
-        if (isset($permissions)) {
-            echo '<table class=""  style=" "><thead ><th width="175px">Название разрешения</th><th>Описание</th></thead>';
-            foreach ($permissions as $permission) {
-                echo '<tr>' .
-                    '<td>' . $permission . '</td>' .
-                    '<td><i>(' . $this->auth_item[$permission]['description'] . ')</i></td>' .
-                    '</tr>';
-            }
-            echo '</table>';
-        }
-
-        if (isset($roles)) {
-            foreach ($roles as $role) {
-                $this->drawChildrenBranch($role, $level);
-            }
-        }
-
-
-        echo '</div>';
-        echo '</div>';
-    }*/
 
     private function getChildren($role)
     {

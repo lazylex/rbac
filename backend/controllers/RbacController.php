@@ -99,7 +99,7 @@ class RbacController extends Controller
 
             foreach ($permissions as $permission)
             {
-                $user['permissions'][] = ['name'=>$permission->name , 'description'=>$permission->description];
+                $user['permissions'][] = $permission->name;
             }
         }
 
