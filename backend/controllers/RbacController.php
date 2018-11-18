@@ -18,7 +18,7 @@ use yii\web\Controller;
 class RbacController extends Controller
 {
 
-    public $layout='rbac';
+    public $layout = 'rbac';
 
     public function behaviors()
     {
@@ -53,8 +53,8 @@ class RbacController extends Controller
         $id = \Yii::$app->request->post('id');
         $identity = User::findIdentity($id);
         if ($identity == null) {
-            echo 'Пользователь с таким ID не существует';
-            die();
+            \Yii::$app->session->setFlash('error', "Пользователя с таким ID не существует");
+            return $this->redirect('users');
         }
         $user['name'] = $identity->username;
 
@@ -69,7 +69,7 @@ class RbacController extends Controller
                     ];
         } else
             $user['roles'] = [];
-        $user['id']=$id;
+        $user['id'] = $id;
         $permissions = \Yii::$app->authManager->getPermissionsByUser($id);
         if (count($permissions) > 0) {
             foreach ($permissions as $permission)
@@ -80,7 +80,10 @@ class RbacController extends Controller
                         'rule' => $permission->ruleName
                     ];
         }
-        return $this->render('user', ['user' => $user]);
+        /* При запрете на владение пользователем многими ролями, в roles_selector_type передать радио
+        или вообще не передавать эту переменную. При разрешении на владение многими ролями передать checkbox
+         */
+        return $this->render('user', ['user' => $user, 'roles_selector_type' => 'checkbox']);
     }
 
     public function actionUsers()
@@ -97,9 +100,8 @@ class RbacController extends Controller
 
             $permissions = \Yii::$app->authManager->getPermissionsByUser($user['id']);
 
-            foreach ($permissions as $permission)
-            {
-                $user['permissions'][] = $permission->name;
+            foreach ($permissions as $permission) {
+                $user['permissions'][] = ['name' => $permission->name, 'description' => $permission->description];
             }
         }
 
@@ -116,25 +118,23 @@ class RbacController extends Controller
         /* Создаю пользователей */
 
         /* Создаю разрешение на создание ролей*/
-    /*    $createRole1 = $auth->createPermission('boy');
-        $createRole1->description = 'Ничего не может';
-        $auth->add($createRole1);*/
+        /*    $createRole1 = $auth->createPermission('boy');
+            $createRole1->description = 'Ничего не может';
+            $auth->add($createRole1);*/
 
 
         /* Создаю роль заместителя */
-        //$role_deputy = $auth->createRole('Повелитель');
-        //$role_deputy->description = 'Самый главный человек';
-        //$auth->add($role_deputy);
+        $role_deputy = $auth->createPermission('Ассорти');
+        $role_deputy->description = 'Ассорти';
+        $auth->add($role_deputy);
 
         //$auth->addChild($auth->getRole('Консильери'),$role_deputy);
 
         //$auth->addChild($role_deputy,$auth->getPermission('boy'));//даем заместителю разрешение на создание ролей
 
-        $pizza=$auth->createPermission('pizza');
-        $pizza->description="Может заказывать на обед пиццу за счет фирмы";
-        $auth->add($pizza);
+        $pizza = $auth->getPermission('pizza');
 
-$auth->assign($pizza,31);
+        $auth->addChild($pizza, $role_deputy);
 
 
         echo 'new';

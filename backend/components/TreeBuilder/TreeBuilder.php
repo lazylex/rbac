@@ -1,15 +1,10 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Anonimus
- * Date: 12.11.2018
- * Time: 8:11
- */
 
 namespace backend\components\TreeBuilder;
 
 use backend\models\AuthItem;
 use backend\models\AuthItemChild;
+use yii\helpers\Html;
 
 /**
  * Class TreeBuilder
@@ -40,12 +35,15 @@ class TreeBuilder
 
     /**
      * Построитель дерева в виде массива
-     * @param string $role имя роли, для которой необходимо построить дерево
+     * @param string $parent имя роли, для которой необходимо построить дерево
      */
-    public function BuildTree($role)
+    public function BuildTree($parent)
     {
         $this->tree=[];
-        $this->tree['roles'][$role] = $this->getChildrenRoles($role);
+        if($this->isRole($parent))
+            $this->tree['roles'][$parent] = $this->getChildrenRolesAndPermissions($parent);
+        else
+            $this->tree['permissions'][$parent] = $this->getChildrenRolesAndPermissions($parent);
     }
 
     /**
@@ -60,21 +58,38 @@ class TreeBuilder
         $result .= '<ul class="" style="margin: 0">';
         if (isset($tree['permissions'])) {
             foreach ($tree['permissions'] as $key =>$perm) {
-                $result .= '<li class="list-group-item list-group-item-info">'
-                    . '<span class="glyphicon glyphicon-lock"></span> '
-                    . $key . ' <span class="label label-info">' . $this->auth_item[$key]['description'] . '</span></li>';
+
+                $result .=Html::tag('li',
+                    Html::tag('span','',['class'=>'glyphicon glyphicon-lock']).' '
+                    .Html::a($key.' ' ,'permission',
+                        [
+                            'data' => [
+                                'method' => 'post',
+                                'params' => ['name'=>$key],
+                            ]
+                        ])
+                    .Html::tag('span',$this->auth_item[$key]['description'],['class'=>'label label-info'])
+                    ,['class'=>'list-group-item list-group-item-info']);
                 $result .= $this->buildList($perm);
             }
         }
 
         if (isset($tree['roles'])) {
-            foreach ($tree['roles'] as $key => $role) {
-                $result .= '<li class="list-group-item list-group-item-success">
-                        <span class="glyphicon glyphicon-user"></span> <a href="role?id='.$key.'">' . $key
-                    . '</a> <span class="label label-success">' . $this->auth_item[$key]['description'] . '</span></li>';
+            foreach ($tree['roles'] as $key =>$role) {
+
+                $result .=Html::tag('li',
+                    Html::tag('span','',['class'=>'glyphicon glyphicon-user']).' '
+                    .Html::a($key.' ' ,'role',
+                        [
+                            'data' => [
+                                'method' => 'post',
+                                'params' => ['name'=>$key],
+                            ]
+                        ])
+                    .Html::tag('span',$this->auth_item[$key]['description'],['class'=>'label label-success'])
+                    ,['class'=>'list-group-item list-group-item-success']);
                 $result .= $this->buildList($role);
             }
-
         }
         $result .= '</ul>';
 
@@ -83,12 +98,12 @@ class TreeBuilder
 
     /**
      * Рекурсивная функция поиска потомков
-     * @param string $role роль для которой необходимо найти потомков первого уровня
-     * @return array|null массив потомков первого уровня для заданной роли
+     * @param string $parent роль или разрешение, для которых необходимо найти потомков
+     * @return array|null массив потомков для заданной роли или разрешения
      */
-    private function getChildrenRoles($role)
+    private function getChildrenRolesAndPermissions($parent)
     {
-        $children = $this->getChildren($role);
+        $children = $this->getChildren($parent);
         $child_role = [];
         if (is_null($children)) {
             return null;
@@ -96,16 +111,20 @@ class TreeBuilder
 
         foreach ($children as $child) {
             if ($this->isRole($child['child'])) {
-                $child_role['roles'][$child['child']] = $this->getChildrenRoles($child['child']);
+                $child_role['roles'][$child['child']] = $this->getChildrenRolesAndPermissions($child['child']);
             }
             if ($this->isPermission($child['child'])) {
-                $child_role['permissions'][$child['child']] = $this->getChildrenRoles($child['child']);
+                $child_role['permissions'][$child['child']] = $this->getChildrenRolesAndPermissions($child['child']);
             }
         }
-
         return $child_role;
     }
 
+    /**
+     * Функиция проверяющая, является ли $name ролью
+     * @param string $name имя предполагаемой роли
+     * @return bool
+     */
     public function isRole($name)
     {
         if (!isset($this->auth_item[$name]))
@@ -113,6 +132,11 @@ class TreeBuilder
         return ($this->auth_item[$name]['type'] == '1') ? true : false;
     }
 
+    /**
+     * Функция проверяющая, является ли $name разрешением
+     * @param string $name имя предполагаемого разрешения
+     * @return bool
+     */
     public function isPermission($name)
     {
         if (!isset($this->auth_item[$name]))
@@ -120,9 +144,13 @@ class TreeBuilder
         return ($this->auth_item[$name]['type'] == '2') ? true : false;
     }
 
-    private function getChildren($role)
+    /**
+     * @param string $parent имя роли или разрешения, для которых необходимо вернуть прямых потомков
+     * @return array|null массив прямых потомков
+     */
+    private function getChildren($parent)
     {
-        $children = AuthItemChild::find()->select('child')->where(['parent' => $role])->asArray()->all();
+        $children = AuthItemChild::find()->select('child')->where(['parent' => $parent])->asArray()->all();
         return count($children) == 0 ? null : $children;
     }
 

@@ -6,8 +6,8 @@ $this->title = 'Редактировать: ' . $user['name'];
 $this->params['breadcrumbs'][] = ['label' => 'Пользователи', 'url' => 'users'];
 $this->params['breadcrumbs'][] = $this->title;
 
-echo Html::beginTag('div', ['style' => 'background: white; border: solid 1px #e8e8e8; border-radius: 5px']);
-
+echo Html::beginTag('div', [ 'style' => 'background: white; border: solid 1px #e8e8e8; border-radius: 5px; padding: 5px']);
+echo '<form method="post" target="_self">';
 
 $auth = \Yii::$app->authManager;
 $allPermissions = $auth->getPermissions();//все возможные разрешения
@@ -17,10 +17,13 @@ $userOriginalPermissions = [];//все разрешения пользовате
 $userRoles = $auth->getRolesByUser($user['id']);//все роли пользователя
 $userPrivatePermissions = [];//личные разрешения пользователя
 
+if (!(isset($roles_selector_type) && ($roles_selector_type == 'radio' || $roles_selector_type == 'checkbox'))) {
+    $roles_selector_type = 'radio';
+}
 
 if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRole', ['roles' => $user['roles']])) {
-    echo Html::tag('div', 'У Вас нет прав для редактирования данного пользователя');
-    die;
+    \Yii::$app->session->setFlash('error', "У Вас нет прав для редактирования данного пользователя");
+    return $this->redirect('users');
 }
 
 //echo '<pre>'.print_r($user['roles'][0]['role'],true).'</pre>';
@@ -50,9 +53,11 @@ $PrivatePermissions = \backend\models\AuthAssignment::find()->select('item_name'
 foreach ($PrivatePermissions as $permission) {
     if ($treeBuilder->isPermission($permission['item_name'])) {
         $userPrivatePermissions[] = $permission['item_name'];
-        echo '<li class="list-group-item list-group-item-info">'
+        /*echo '<li class="list-group-item list-group-item-info">'
             . '<span class="glyphicon glyphicon-lock"></span> '
-            . $permission['item_name'] . ' <span class="label label-info">' . $allPermissions[$permission['item_name']]->description . '</span></li>';
+            . $permission['item_name'] . ' <span class="label label-info">' . $allPermissions[$permission['item_name']]->description . '</span></li>';*/
+        $treeBuilder->BuildTree($permission['item_name']);
+        echo $treeBuilder->buildList($treeBuilder->tree);
     }
 }
 //echo '<pre>'.print_r($treeBuilder->tree,true).'</pre>';
@@ -80,6 +85,8 @@ foreach ($allPermissions as $permission) {
 
     echo Html::tag('td', Html::tag('input', '',
         [
+            'name'=>'private_roles[]',
+            'value'=>$permission->name,
             'type' => 'checkbox',
             'checked' => in_array($permission->name, $userOriginalPermissions),
         ]));
@@ -123,7 +130,7 @@ echo Html::endTag('thead');
 
 foreach ($allRoles as $role) {
     echo Html::beginTag('tr');
-    echo Html::tag('td', Html::tag('input', '', ['type' => 'checkbox', 'checked' => in_array($role, $userRoles)]));
+    echo Html::tag('td', Html::tag('input', '', ['name' => 'role[]', 'value' => $role->name, 'type' => $roles_selector_type, 'checked' => in_array($role, $userRoles)]));
     echo Html::tag('td', $role->name);
     echo Html::tag('td', $role->description);
     echo Html::tag('td', $role->ruleName);
@@ -135,5 +142,10 @@ echo Html::endTag('div');
 
 echo Html::endTag('div');
 
+echo Html::beginTag('div',['style'=>'text-align:center']);
+echo Html::tag('button','Сохранить',['class'=>'btn btn-primary','type'=>'submit','target'=>'rbac/user','method'=>'post']);
+echo Html::endTag('div');
+
+echo '</form>';
 
 echo Html::endTag('div');

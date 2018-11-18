@@ -33,6 +33,8 @@ $this->params['breadcrumbs'][] = $this->title;
        // $roles == Html::tag('ul', $roles);
 
         $permissions = '';
+//        echo '<pre>'.print_r($user['permissions']).'</pre>';
+//        die;
         foreach ($user['permissions'] as $permission) {
 
             //кроме главного никто не должен знать название разрешения на полный доступ к изменению ролей
