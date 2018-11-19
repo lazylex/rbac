@@ -10,6 +10,9 @@ namespace backend\controllers;
 
 
 use backend\models\AuthAssignment;
+use backend\models\AuthItem;
+use backend\models\AuthItemChild;
+use backend\models\AuthRule;
 use common\models\User;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -37,15 +40,21 @@ class RbacController extends Controller
 
     public function actionIndex()
     {
-        echo 'welcome';
-        echo '<ul>';
-        echo '<li>' . Html::a('Пользователи', Url::to(['users'])) . '</li>';
-        echo '<li>' . Html::a('Роли', Url::to(['roles'])) . '</li>';
-        echo '<li>' . Html::a('auth_assignment', Url::to(['/auth-assignment'])) . '</li>';
-        echo '<li>' . Html::a('auth_item', Url::to(['/auth-item'])) . '</li>';
-        echo '<li>' . Html::a('auth_item-child', Url::to(['/auth-item-child'])) . '</li>';
-        echo '<li>' . Html::a('auth_rule', Url::to(['/auth-rule'])) . '</li>';
-        echo '</ul>';
+        $role_count = count(\Yii::$app->authManager->getRoles());
+        $user_count = (new \yii\db\Query())->select('id')->from('user')->count();
+        $auth_assignment_count = AuthAssignment::find()->count();
+        $auth_item_count = AuthItem::find()->count();
+        $auth_item_child_count = AuthItemChild::find()->count();
+        $auth_rule_count = AuthRule::find()->count();
+        return $this->render('index',
+            [
+                'role_count' => $role_count,
+                'user_count' => $user_count,
+                'auth_assignment_count' => $auth_assignment_count,
+                'auth_item_count' => $auth_item_count,
+                'auth_item_child_count' => $auth_item_child_count,
+                'auth_rule_count' => $auth_rule_count,
+            ]);
     }
 
     public function actionUser()
@@ -80,10 +89,10 @@ class RbacController extends Controller
                         'rule' => $permission->ruleName
                     ];
         }
-        /* При запрете на владение пользователем многими ролями, в roles_selector_type передать радио
+        /* При запрете на владение пользователем многими ролями, в roles_selector_type передать radio
         или вообще не передавать эту переменную. При разрешении на владение многими ролями передать checkbox
          */
-        return $this->render('user', ['user' => $user, 'roles_selector_type' => 'checkbox']);
+        return $this->render('user', ['user' => $user, 'roles_selector_type' => 'radio']);
     }
 
     public function actionUsers()

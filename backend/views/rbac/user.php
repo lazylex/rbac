@@ -6,8 +6,8 @@ $this->title = 'Редактировать: ' . $user['name'];
 $this->params['breadcrumbs'][] = ['label' => 'Пользователи', 'url' => 'users'];
 $this->params['breadcrumbs'][] = $this->title;
 
-echo Html::beginTag('div', [ 'style' => 'background: white; border: solid 1px #e8e8e8; border-radius: 5px; padding: 5px']);
-echo '<form method="post" target="_self">';
+echo Html::beginTag('div', ['style' => 'background: white; border: solid 1px #e8e8e8; border-radius: 5px; padding: 5px']);
+echo '<form method="post" action="' . \yii\helpers\Url::to(['/rbac/index']) . '">';
 
 $auth = \Yii::$app->authManager;
 $allPermissions = $auth->getPermissions();//все возможные разрешения
@@ -39,12 +39,11 @@ $treeBuilder = new backend\components\TreeBuilder\TreeBuilder();
 foreach ($user['roles'] as $userRole) {
     $treeBuilder->BuildTree($userRole['role']);
 
-    //echo '<pre>'.print_r($treeBuilder->tree,true).'</pre>';
+    echo '<pre>'.print_r($treeBuilder->tree,true).'</pre>';
     /* заполняем разрешения, принадлежащие непосредственно роли, а не ее наследникам */
     if (isset($treeBuilder->tree['roles'][$userRole['role']]['permissions']))
-        foreach ($treeBuilder->tree['roles'][$userRole['role']]['permissions'] as $originalPermission) {
-            $userOriginalPermissions[] = $originalPermission;
-
+        foreach ($treeBuilder->tree['roles'][$userRole['role']]['permissions'] as $key=>$originalPermission) {
+            $userOriginalPermissions[] = $key;
         }
     echo $treeBuilder->buildList($treeBuilder->tree);
 }
@@ -60,7 +59,7 @@ foreach ($PrivatePermissions as $permission) {
         echo $treeBuilder->buildList($treeBuilder->tree);
     }
 }
-//echo '<pre>'.print_r($treeBuilder->tree,true).'</pre>';
+
 echo Html::endTag('div');
 
 echo Html::beginTag('div', ['class' => 'col-md-5']);
@@ -85,8 +84,8 @@ foreach ($allPermissions as $permission) {
 
     echo Html::tag('td', Html::tag('input', '',
         [
-            'name'=>'private_roles[]',
-            'value'=>$permission->name,
+            'name' => 'private_roles[]',
+            'value' => $permission->name,
             'type' => 'checkbox',
             'checked' => in_array($permission->name, $userOriginalPermissions),
         ]));
@@ -136,16 +135,26 @@ foreach ($allRoles as $role) {
     echo Html::tag('td', $role->ruleName);
     echo Html::endTag('tr');
 }
+
+if ($roles_selector_type == 'radio') {
+    echo Html::beginTag('tr');
+    echo Html::tag('td', Html::tag('input', '', ['name' => 'role[]', 'value' => '', 'type' => $roles_selector_type, 'checked' => false]));
+    echo Html::tag('td', 'Нет ролей');
+    echo Html::tag('td', 'У пользователя нет ни одной роли');
+    echo Html::tag('td', '');
+    echo Html::endTag('tr');
+}
+
 echo Html::endTag('table');
 echo Html::endTag('div');
 
 
 echo Html::endTag('div');
 
-echo Html::beginTag('div',['style'=>'text-align:center']);
-echo Html::tag('button','Сохранить',['class'=>'btn btn-primary','type'=>'submit','target'=>'rbac/user','method'=>'post']);
+echo Html::beginTag('div', ['style' => 'text-align:center']);
+echo Html::tag('button', 'Сохранить', ['class' => 'btn btn-primary', 'type' => 'submit']);
 echo Html::endTag('div');
-
+echo Html::input("hidden", "_csrf-backend", Yii::$app->request->getCsrfToken());
 echo '</form>';
 
 echo Html::endTag('div');
