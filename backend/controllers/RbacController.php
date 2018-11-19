@@ -57,6 +57,16 @@ class RbacController extends Controller
             ]);
     }
 
+    public function actionRole()
+    {
+        return $this->render('role');
+    }
+
+    public function actionRoles()
+    {
+        return $this->render('roles');
+    }
+
     public function actionUser()
     {
         $id = \Yii::$app->request->post('id');
@@ -92,7 +102,7 @@ class RbacController extends Controller
         /* При запрете на владение пользователем многими ролями, в roles_selector_type передать radio
         или вообще не передавать эту переменную. При разрешении на владение многими ролями передать checkbox
          */
-        return $this->render('user', ['user' => $user, 'roles_selector_type' => 'radio']);
+        return $this->render('user', ['user' => $user, 'roles_selector_type' => 'checkbox']);
     }
 
     public function actionUsers()
