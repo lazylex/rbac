@@ -72,7 +72,7 @@ class RbacController extends Controller
         $id = \Yii::$app->request->post('id');
         $identity = User::findIdentity($id);
         if ($identity == null) {
-            \Yii::$app->session->setFlash('error', "Пользователя с таким ID не существует");
+            \Yii::$app->session->setFlash('error', "Пользователь не выбран или не существует");
             return $this->redirect('users');
         }
         $user['name'] = $identity->username;

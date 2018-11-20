@@ -11,6 +11,8 @@ $this->params['breadcrumbs'][] = $this->title;
 $auth = \Yii::$app->authManager;
 $allPermissions = $auth->getPermissions();//все возможные разрешения
 $allRoles = $auth->getRoles();//все возможные роли
+
+/* лишний запрос. В контроллере уже создано $user['permissions'] */
 $userPermissions = $auth->getPermissionsByUser($user['id']);//все разрешения пользователя (включая унаследованные)
 $userOriginalPermissions = [];//все разрешения пользователя (без унаследованных) (массив строк)
 $userRoles = $auth->getRolesByUser($user['id']);//все роли пользователя
@@ -25,10 +27,14 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
     return $this->redirect('users');
 }
 
+$as=\backend\models\AuthSingleton::getInstance();
+
+echo '<pre>'.print_r($as->getTree('Главный'),true).'</pre>';
+die;
 ?>
 
 <div style="background: white; border: solid 1px #e8e8e8; border-radius: 5px; padding: 5px">
-    <form method="post" action="' <?= \yii\helpers\Url::to(['/rbac/index']) ?> '">'
+    <form method="post" action="<?= \yii\helpers\Url::to(['/rbac/index']) ?>">'
 
         <div class="row">
             <div class="col-md-3">
@@ -75,14 +81,14 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                     <th>Правило</th>
                     </thead>
 
-                    <?php
-
-                    foreach ($allPermissions as $permission) {
+                    <?php foreach ($allPermissions as $permission) :
 
                         if ($permission->name == 'changeAllRoles' && (!\Yii::$app->user->can('changeAllRoles')))
                             continue;
                         ?>
-                        <tr>
+                        <tr id="tr_<?=$permission->name?>" <?= in_array($permission, $userPermissions)
+                        || in_array($permission->name, $userOriginalPermissions)
+                        || in_array($permission->name, $userPrivatePermissions) ? 'style="background: #d9edf7"' : '' ?>>
                             <td>
                                 <input name="private_roles[]"
                                        type="checkbox"
@@ -103,9 +109,7 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                             <td><?= $permission->description ?></td>
                             <td><?= $permission->ruleName ?></td>
                         </tr>
-                        <?php
-                    }
-                    ?>
+                    <?php endforeach; ?>
                 </table>
             </div>
             <div class="col-md-4">
@@ -125,7 +129,7 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                                 <input name="role[]"
                                        value="<?= $role->name ?>"
                                        type="<?= $roles_selector_type ?>"
-                                       <?= in_array($role, $userRoles) ? 'checked="checked"' : '' ?>
+                                    <?= in_array($role, $userRoles) ? 'checked="checked"' : '' ?>
                                 >
                             </td>
                             <td><?= $role->name ?></td>
@@ -133,25 +137,24 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                             <td><?= $role->ruleName ?></td>
                         </tr>
                     <?php endforeach; ?>
-                    <?php
-                    if ($roles_selector_type == 'radio') {
-                        echo Html::beginTag('tr');
-                        echo Html::tag('td', Html::tag('input', '', ['name' => 'role[]', 'value' => '', 'type' => $roles_selector_type, 'checked' => false]));
-                        echo Html::tag('td', 'Нет ролей');
-                        echo Html::tag('td', 'У пользователя нет ни одной роли');
-                        echo Html::tag('td', '');
-                        echo Html::endTag('tr');
-                    }
-
-                    echo '</table>';
-                    echo Html::endTag('div');
+                    <?php if ($roles_selector_type == 'radio') : ?>
+                        <tr>
+                            <td>
+                                <input name="role[]" value="" type="<?= $roles_selector_type ?>">
+                            </td>
+                            <td>Роли отсутствуют</td>
+                            <td>Пользователю не присвоено ни одной роли</td>
+                            <td></td>
+                        </tr>
+                    <?php endif; ?>
 
 
-                    echo Html::endTag('div');
-
-                    echo Html::beginTag('div', ['style' => 'text-align:center']);
-                    echo Html::tag('button', 'Сохранить', ['class' => 'btn btn-primary', 'type' => 'submit']);
-                    echo Html::endTag('div');
-                    echo Html::input("hidden", "_csrf-backend", Yii::$app->request->getCsrfToken()); ?>
+                </table>
+            </div>
+        </div>
+        <div style="text-align: center">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+        <input type="hidden" name="_csrf-backend" value="<?= Yii::$app->request->getCsrfToken() ?>">
     </form>
 </div>
