@@ -14,7 +14,7 @@ use yii\helpers\Html;
  */
 class TreeBuilder
 {
-    private $auth_item=[];
+    public $auth_item=[];
     public $tree = [];
 
     /**
@@ -22,7 +22,7 @@ class TreeBuilder
      */
     public function __construct()
     {
-        $auth_items = AuthItem::find()->select(['name', 'type', 'rule_name', 'description'])->asArray()->all();
+        /*$auth_items = AuthItem::find()->select(['name', 'type', 'rule_name', 'description'])->asArray()->all();
         foreach ($auth_items as $auth_item) {
             $this->auth_item[$auth_item['name']] =
                 [
@@ -30,7 +30,7 @@ class TreeBuilder
                     'rule_name' => $auth_item['rule_name'],
                     'description' => $auth_item['description']
                 ];
-        }
+        }*/
     }
 
     /**

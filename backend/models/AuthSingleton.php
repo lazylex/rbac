@@ -20,14 +20,15 @@ class AuthSingleton
 {
     protected static $_instance;
 
-    private $auth_item=[];
-    private $tree=[];
+    private $auth_item = [];
+    private $tree = [];
 
     /**
      * Функция для получения экземпляра данного класса
      * @return AuthSingleton
      */
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (self::$_instance === null) {
             self::$_instance = new self;
         }
@@ -37,7 +38,8 @@ class AuthSingleton
     /**
      * Конструктор, заполняет таблицу ролей и прав
      */
-    private function __construct() {
+    private function __construct()
+    {
         $this->fillAuthItem();
     }
 
@@ -58,13 +60,41 @@ class AuthSingleton
     }
 
     /**
+     * Функция возвращающая все возможные роли
+     * @return array все роли
+     */
+    public function getRoles()
+    {
+        $result = [];
+        foreach ($this->auth_item as $key => $item) {
+            if ($item['type'] == 1)
+                $result[] = $key;
+        }
+        return $result;
+    }
+
+    /**
+     * Функция возвращающая все возможные разрешения
+     * @return array все разрешения
+     */
+    public function getPermissions()
+    {
+        $result = [];
+        foreach ($this->auth_item as $key => $item) {
+            if ($item['type'] == 2)
+                $result[] = $key;
+        }
+        return $result;
+    }
+
+    /**
      * Возвращаем описание по имени роли/разрешения
      * @param string $name имя роли/разрешения
      * @return string Описание роли/правила
      */
     public function getItemDescription($name)
     {
-        if(isset($this->auth_item[$name]['description']))
+        if (isset($this->auth_item[$name]['description']))
             return $this->auth_item[$name]['description'];
         return '';
     }
@@ -76,7 +106,7 @@ class AuthSingleton
      */
     public function getItemRule($name)
     {
-        if(isset($this->auth_item[$name]['rule_name']))
+        if (isset($this->auth_item[$name]['rule_name']))
             return $this->auth_item[$name]['rule_name'];
         return '';
     }
@@ -88,21 +118,35 @@ class AuthSingleton
     public function BuildTree($parent)
     {
         //$this->tree=[];
-        if($this->isRole($parent))
+        if ($this->isRole($parent))
             $this->tree['roles'][$parent] = $this->getChildrenRolesAndPermissions($parent);
         else
             $this->tree['permissions'][$parent] = $this->getChildrenRolesAndPermissions($parent);
     }
 
+    public function getAuthItem()
+    {
+        return $this->auth_item;
+    }
+
+
     public function getTree($parent)
     {
-        if($this->isRole($parent)) {
-            if(!isset($this->tree['roles'][$parent]))
+
+        if (!isset($this->tree['roles'][$parent]) && !isset($this->tree['permission'][$parent]))
+            $this->BuildTree($parent);
+        return $this->tree;
+    }
+
+    public function getBranch($parent)
+    {
+        if ($this->isRole($parent)) {
+            if (!isset($this->tree['roles'][$parent]))
                 $this->BuildTree($parent);
             return $this->tree['roles'][$parent];
         }
-        if($this->isPermission($parent)) {
-            if(!$this->tree['permission'][$parent])
+        if ($this->isPermission($parent)) {
+            if (!$this->tree['permission'][$parent])
                 $this->BuildTree($parent);
             return $this->tree['permission'][$parent];
         }
@@ -170,10 +214,14 @@ class AuthSingleton
     /**
      * запрещаем клонирование объекта модификатором private
      */
-    private function __clone() {}
+    private function __clone()
+    {
+    }
 
     /**
      * запрещаем клонирование объекта модификатором private
      */
-    private function __wakeup() {}
+    private function __wakeup()
+    {
+    }
 }

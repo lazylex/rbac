@@ -89,7 +89,7 @@ class RbacController extends Controller
         } else
             $user['roles'] = [];
         $user['id'] = $id;
-        $permissions = \Yii::$app->authManager->getPermissionsByUser($id);
+        /*$permissions = \Yii::$app->authManager->getPermissionsByUser($id);
         if (count($permissions) > 0) {
             foreach ($permissions as $permission)
                 $user['permissions'][] =
@@ -98,7 +98,7 @@ class RbacController extends Controller
                         'description' => $permission->description,
                         'rule' => $permission->ruleName
                     ];
-        }
+        }*/
         /* При запрете на владение пользователем многими ролями, в roles_selector_type передать radio
         или вообще не передавать эту переменную. При разрешении на владение многими ролями передать checkbox
          */
