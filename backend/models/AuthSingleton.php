@@ -21,6 +21,7 @@ class AuthSingleton
     protected static $_instance;
 
     private $auth_item = [];
+    private $auth_assignment = [];
     private $tree = [];
 
     /**
@@ -41,6 +42,7 @@ class AuthSingleton
     private function __construct()
     {
         $this->fillAuthItem();
+        $this->fillAuthAssignment();
     }
 
     /**
@@ -55,6 +57,20 @@ class AuthSingleton
                     'type' => $auth_item['type'],
                     'rule_name' => $auth_item['rule_name'],
                     'description' => $auth_item['description']
+                ];
+        }
+    }
+
+    /**
+     * заполняем теблицу соответствия пользователей и ролей/прав
+     */
+    public function fillAuthAssignment()
+    {
+        $auth_assignments = AuthAssignment::find()->select(['user_id','item_name'])->asArray()->all();
+        foreach ($auth_assignments as $auth_assignment) {
+            $this->auth_assignment['user_id'] =
+                [
+                    'item_name' => $auth_assignment['user_id']
                 ];
         }
     }
@@ -132,7 +148,6 @@ class AuthSingleton
 
     public function getTree($parent)
     {
-
         if (!isset($this->tree['roles'][$parent]) && !isset($this->tree['permission'][$parent]))
             $this->BuildTree($parent);
         return $this->tree;
