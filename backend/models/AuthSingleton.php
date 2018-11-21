@@ -66,13 +66,23 @@ class AuthSingleton
      */
     public function fillAuthAssignment()
     {
-        $auth_assignments = AuthAssignment::find()->select(['user_id','item_name'])->asArray()->all();
+        $auth_assignments = AuthAssignment::find()->select(['user_id', 'item_name'])->asArray()->all();
         foreach ($auth_assignments as $auth_assignment) {
-            $this->auth_assignment['user_id'] =
-                [
-                    'item_name' => $auth_assignment['user_id']
-                ];
+            $this->auth_assignment[$auth_assignment['user_id']][] = $auth_assignment['item_name'];
+
         }
+    }
+
+    public function getPrivatePermissionsByUser($id)
+    {
+        $result = [];
+        //echo '<pre>'.print_r($this->auth_assignment,true).'</pre>';die();
+        foreach ($this->auth_assignment[$id] as $item) {
+            if ($this->isPermission($item))
+                $result[] = $item;
+        }
+
+        return $result;
     }
 
     /**

@@ -12,7 +12,7 @@ $auth = \Yii::$app->authManager;
 $as = \backend\models\AuthSingleton::getInstance();
 $allPermissions = $as->getPermissions();//все возможные разрешения
 $allRoles = $as->getRoles();//все возможные роли
-
+$PrivatePermissions = $as->getPrivatePermissionsByUser($user['id']);
 foreach ($auth->getPermissionsByUser($user['id']) as $key => $item)//все разрешения пользователя (включая унаследованные)
     $userPermissions[] = $key;
 $userOriginalPermissions = [];//все разрешения пользователя (без унаследованных) (массив строк)
@@ -56,17 +56,17 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                         }
                 }
 
-                $PrivatePermissions = \backend\models\AuthAssignment::find()->select('item_name')->where(['user_id' => $user['id']])->asArray()->all();
+
                 foreach ($PrivatePermissions as $permission) {
-                    if ($as->isPermission($permission['item_name'])) {
-                        $userPrivatePermissions[] = $permission['item_name'];
-                        $treeBuilder->tree=$as->getTree($permission['item_name']);
+                    if ($as->isPermission($permission)) {
+                        $userPrivatePermissions[] = $permission;
+                        $treeBuilder->tree=$as->getTree($permission);
                     }
                 }
                 echo $treeBuilder->buildList($treeBuilder->tree);
                 ?>
 
-            </div>
+            </div>ma
             <div class="col-md-5">
 
                 <!-- Вывод таблицы разрешений -->
