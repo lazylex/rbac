@@ -107,20 +107,21 @@ class RbacController extends Controller
 
     public function actionUsers()
     {
+        $as = \backend\models\AuthSingleton::getInstance();
         $users = User::find()->select(['id', 'username', 'status', 'created_at'])->asArray()->all();
 
         /* добавляю массиву пользователей поля, содержащее массивы названий ролей и прав*/
         foreach ($users as &$user) {
 
-            $roles = \Yii::$app->authManager->getRolesByUser($user['id']);
+            $roles = $as->getRolesByUser($user['id']);
 
             foreach ($roles as $role)
-                $user['roles'][] = $role->name;
+                $user['roles'][] = $role;
 
-            $permissions = \Yii::$app->authManager->getPermissionsByUser($user['id']);
+            $permissions = $as->getPermissionsByUser($user['id']);
 
             foreach ($permissions as $permission) {
-                $user['permissions'][] = ['name' => $permission->name, 'description' => $permission->description];
+                $user['permissions'][] = ['name' => $permission, 'description' => $as->getItemDescription($permission)];
             }
         }
 
@@ -143,18 +144,20 @@ class RbacController extends Controller
 
 
         /* Создаю роль заместителя */
-        $role_deputy = $auth->createPermission('Ассорти');
-        $role_deputy->description = 'Ассорти';
-        $auth->add($role_deputy);
-
+        $role_deputy = $auth->getRole('Владелец');
+        //$role_deputy->description = 'Владелец домена';
+        //$auth->add($role_deputy);
+$per=$auth->createPermission('Зарплата');
+$per->description='Платить зарплату';
+$auth->add($per);
         //$auth->addChild($auth->getRole('Консильери'),$role_deputy);
 
         //$auth->addChild($role_deputy,$auth->getPermission('boy'));//даем заместителю разрешение на создание ролей
 
-        $pizza = $auth->getPermission('pizza');
+        //$pizza = $auth->getPermission('pizza');
 
-        $auth->addChild($pizza, $role_deputy);
-
+        //$auth->addChild($pizza, $role_deputy);
+$auth->addChild($role_deputy,$per);
 
         echo 'new';
     }

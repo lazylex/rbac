@@ -12,15 +12,10 @@ $auth = \Yii::$app->authManager;
 $as = \backend\models\AuthSingleton::getInstance();
 $allPermissions = $as->getPermissions();//все возможные разрешения
 $allRoles = $as->getRoles();//все возможные роли
-$PrivatePermissions = $as->getPrivatePermissionsByUser($user['id']);
-foreach ($auth->getPermissionsByUser($user['id']) as $key => $item)//все разрешения пользователя (включая унаследованные)
-    $userPermissions[] = $key;
+$userPrivatePermissions = $as->getPrivatePermissionsByUser($user['id']);//разрешения, принадлежащие пользователю, а не его ролям
+$userPermissions = $as->getPermissionsByUser($user['id']);//все разрешения пользователя (включая унаследованные)
 $userOriginalPermissions = [];//все разрешения пользователя (без унаследованных) (массив строк)
-foreach ($auth->getRolesByUser($user['id']) as $key => $item)//все роли пользователя
-{
-    $userRoles[] = $key;
-}
-$userPrivatePermissions = [];//личные разрешения пользователя
+$userRoles = $as->getRolesByUser($user['id']);
 
 if (!(isset($roles_selector_type) && ($roles_selector_type == 'radio' || $roles_selector_type == 'checkbox'))) {
     $roles_selector_type = 'radio';
@@ -57,16 +52,16 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                 }
 
 
-                foreach ($PrivatePermissions as $permission) {
+                foreach ($userPrivatePermissions as $permission) {
                     if ($as->isPermission($permission)) {
-                        $userPrivatePermissions[] = $permission;
+                      //  $userPrivatePermissions[] = $permission;
                         $treeBuilder->tree=$as->getTree($permission);
                     }
                 }
                 echo $treeBuilder->buildList($treeBuilder->tree);
                 ?>
 
-            </div>ma
+            </div>
             <div class="col-md-5">
 
                 <!-- Вывод таблицы разрешений -->

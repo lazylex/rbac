@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Anonimus
- * Date: 20.11.2018
- * Time: 10:50
- */
 
 namespace backend\models;
 
@@ -13,16 +7,21 @@ namespace backend\models;
  * Class AuthSingleton
  * @package backend\models
  * @property AuthSingleton $_instance экземпляр данного класса
- * @property array $auth_item массив ролей и разрешений. В качестве ключа выступает имя роли или разрешения
  * @property array $tree массив деревье ролей и разрешений. В качестве ключа выступает имя роли или разрешения
+ * @property array $auth_item массив ролей и разрешений. В качестве ключа выступает имя роли или разрешения
+ * @property array $auth_assignment массив ролей/разрешений пользователей. В качестве ключа выступает id пользователя
+ * @property array $auth_item_child массив отношений родитель/потомок. В качестве ключа выступает имя родителя
+ * @property array $user_permissions временный массив, необходимый функции getPermissionsByUser
  */
 class AuthSingleton
 {
     protected static $_instance;
 
+    private $tree = [];
     private $auth_item = [];
     private $auth_assignment = [];
-    private $tree = [];
+    private $auth_item_child=[];
+    private $user_permissions = [];
 
     /**
      * Функция для получения экземпляра данного класса
@@ -43,6 +42,7 @@ class AuthSingleton
     {
         $this->fillAuthItem();
         $this->fillAuthAssignment();
+        $this->fillAuthItemChild();
     }
 
     /**
@@ -62,31 +62,96 @@ class AuthSingleton
     }
 
     /**
-     * заполняем теблицу соответствия пользователей и ролей/прав
+     * Функция Функция выборки данных из базы в массив $auth_assignment
+     * (заполняем таблицу соответствия пользователей и ролей/прав)
      */
     public function fillAuthAssignment()
     {
         $auth_assignments = AuthAssignment::find()->select(['user_id', 'item_name'])->asArray()->all();
         foreach ($auth_assignments as $auth_assignment) {
             $this->auth_assignment[$auth_assignment['user_id']][] = $auth_assignment['item_name'];
-
         }
     }
 
+    /**
+     * Функция выборки данных из базы в массив $auth_item_child
+     * (заполняем таблицу отношений родитель/потомок)
+     */
+    public function fillAuthItemChild()
+    {
+        $auth_item_childs=AuthItemChild::find()->select('*')->asArray()->all();
+
+        foreach ($auth_item_childs as $auth_item_child) {
+            $this->auth_item_child[$auth_item_child['parent']][]=$auth_item_child['child'];
+        }
+    }
+
+    /**
+     * Функция возвращает разрешения, назначенные непосредственно пользователю
+     * @param integer $id идентификатов пользователя
+     * @return array массив разрешений пользователя
+     */
     public function getPrivatePermissionsByUser($id)
     {
         $result = [];
-        //echo '<pre>'.print_r($this->auth_assignment,true).'</pre>';die();
         foreach ($this->auth_assignment[$id] as $item) {
             if ($this->isPermission($item))
                 $result[] = $item;
         }
-
         return $result;
     }
 
     /**
-     * Функция возвращающая все возможные роли
+     * Функция возвращает все разрешения пользователя
+     * @param integer $id идентификатов пользователя
+     * @return array массив разрешений пользователя
+     */
+    public function getPermissionsByUser($id)
+    {
+        $this->user_permissions = [];
+        foreach ($this->auth_assignment[$id] as $item) {
+            if ($this->isPermission($item))
+                $this->user_permissions[] = $item;
+            $this->getPermissionsByItem($item);
+        }
+
+        return $this->user_permissions;
+    }
+
+    /**
+     * Рекурсивная функция поиска разрешений
+     * @param $parent элемент, для которого необходимо найти разрешения
+     */
+    private function getPermissionsByItem($parent)
+    {
+        $childs = $this->getChildren($parent);
+        if (is_null($childs))
+            return;
+        foreach ($childs as $child) {
+            if ($this->isPermission($child)) {
+                $this->user_permissions[] = $child;
+            }
+            $this->getPermissionsByItem($child);
+        }
+    }
+
+    /** Функция возвращает роли пользователя (без наследуемых)
+     * @param integer $id идентификатор пользователя
+     * @return array роли пользователя
+     */
+    public function getRolesByUser($id)
+    {
+        $user_roles = [];
+        foreach ($this->auth_assignment[$id] as $item) {
+            if ($this->isRole($item))
+                $user_roles[] = $item;
+
+        }
+        return $user_roles;
+    }
+
+    /**
+     * Функция возвращающая все существующие роли
      * @return array все роли
      */
     public function getRoles()
@@ -100,7 +165,7 @@ class AuthSingleton
     }
 
     /**
-     * Функция возвращающая все возможные разрешения
+     * Функция возвращающая все существующие разрешения
      * @return array все разрешения
      */
     public function getPermissions()
@@ -143,19 +208,25 @@ class AuthSingleton
      */
     public function BuildTree($parent)
     {
-        //$this->tree=[];
         if ($this->isRole($parent))
             $this->tree['roles'][$parent] = $this->getChildrenRolesAndPermissions($parent);
         else
             $this->tree['permissions'][$parent] = $this->getChildrenRolesAndPermissions($parent);
     }
 
+    /** Геттер. Возвращает массив ролей и разрешений.
+     * @return array массив ролей и разрешений. В качестве ключа выступает имя роли или разрешения
+     */
     public function getAuthItem()
     {
         return $this->auth_item;
     }
 
-
+    /**
+     * Функция возвращает дерево ролей/разрешений (массив $tree)
+     * @param $parent элемент, для которого необходимо вернуть дерево
+     * @return array дерево ролей/разрешений
+     */
     public function getTree($parent)
     {
         if (!isset($this->tree['roles'][$parent]) && !isset($this->tree['permission'][$parent]))
@@ -163,6 +234,11 @@ class AuthSingleton
         return $this->tree;
     }
 
+    /**
+     * Функция возвращает ветвь дерева ролей/разрешений (из массива $tree)
+     * @param $parent элемент, являющийся корнем ветви
+     * @return array ветвь дерева ролей/разрешений
+     */
     public function getBranch($parent)
     {
         if ($this->isRole($parent)) {
@@ -191,16 +267,15 @@ class AuthSingleton
         }
 
         foreach ($children as $child) {
-            if ($this->isRole($child['child'])) {
-                $child_role['roles'][$child['child']] = $this->getChildrenRolesAndPermissions($child['child']);
+            if ($this->isRole($child)) {
+                $child_role['roles'][$child] = $this->getChildrenRolesAndPermissions($child);
             }
-            if ($this->isPermission($child['child'])) {
-                $child_role['permissions'][$child['child']] = $this->getChildrenRolesAndPermissions($child['child']);
+            if ($this->isPermission($child)) {
+                $child_role['permissions'][$child] = $this->getChildrenRolesAndPermissions($child);
             }
         }
         return $child_role;
     }
-
 
     /**
      * Функиция проверяющая, является ли $name ролью
@@ -232,8 +307,17 @@ class AuthSingleton
      */
     private function getChildren($parent)
     {
-        $children = AuthItemChild::find()->select('child')->where(['parent' => $parent])->asArray()->all();
-        return count($children) == 0 ? null : $children;
+       if(isset($this->auth_item_child[$parent])&&count($this->auth_item_child[$parent])>0)
+       {
+           $result=[];
+           foreach ($this->auth_item_child[$parent] as $child)
+           {
+               $result[]=$child;
+           }
+           return $result;
+       }
+       else
+           return null;
     }
 
     /**
