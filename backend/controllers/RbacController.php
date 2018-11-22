@@ -13,6 +13,7 @@ use backend\models\AuthAssignment;
 use backend\models\AuthItem;
 use backend\models\AuthItemChild;
 use backend\models\AuthRule;
+use backend\models\AuthSingleton;
 use common\models\User;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -59,12 +60,27 @@ class RbacController extends Controller
 
     public function actionRole()
     {
-        return $this->render('role');
+        $as = AuthSingleton::getInstance();
+        $name=\Yii::$app->request->get('name');//поменять на пост (не забыть поменять и ссылки в виде ролей)
+        if($name == null||!$as->isRole($name))
+        {
+            \Yii::$app->session->setFlash('error', "Роль не выбрана или не существует");
+            return $this->redirect('roles');
+        }
+        return $this->render('role',['name'=>$name]);
     }
 
     public function actionRoles()
     {
-        return $this->render('roles');
+        $as = AuthSingleton::getInstance();
+        $all_roles=$as->getRoles();
+        foreach ($all_roles as $role)
+        {
+            $roles[$role]['description']=$as->getItemDescription($role);
+            $roles[$role]['rule']=$as->getItemRule($role);
+        }
+        //echo '<pre>'.print_r($roles).'</pre>';die;
+        return $this->render('roles',['roles'=>$roles]);
     }
 
     public function actionUser()
@@ -89,16 +105,6 @@ class RbacController extends Controller
         } else
             $user['roles'] = [];
         $user['id'] = $id;
-        /*$permissions = \Yii::$app->authManager->getPermissionsByUser($id);
-        if (count($permissions) > 0) {
-            foreach ($permissions as $permission)
-                $user['permissions'][] =
-                    [
-                        'permission' => $permission->name,
-                        'description' => $permission->description,
-                        'rule' => $permission->ruleName
-                    ];
-        }*/
         /* При запрете на владение пользователем многими ролями, в roles_selector_type передать radio
         или вообще не передавать эту переменную. При разрешении на владение многими ролями передать checkbox
          */
@@ -107,7 +113,7 @@ class RbacController extends Controller
 
     public function actionUsers()
     {
-        $as = \backend\models\AuthSingleton::getInstance();
+        $as = AuthSingleton::getInstance();
         $users = User::find()->select(['id', 'username', 'status', 'created_at'])->asArray()->all();
 
         /* добавляю массиву пользователей поля, содержащее массивы названий ролей и прав*/

@@ -3,8 +3,9 @@
 use yii\helpers\Html;
 
 $this->title = 'Пользователи';
-
+$this->params['breadcrumbs'][] = ['label' => 'RBAC', 'url' => 'index'];
 $this->params['breadcrumbs'][] = $this->title;
+
 ?>
 <div>
 
@@ -58,7 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'params' => ['id' => $user['id']], // <- extra level
                     ],]);
         } else {
-            $change_user = Html::tag('a', 'Редактировать', ['class' => 'btn', 'disabled' => 'true']);
+            $change_user = Html::tag('button', '<span class="glyphicon glyphicon-ban-circle"></span> Редактировать', ['class' => 'btn', 'disabled' => 'true']);
         }
         echo Html::beginTag('tr');
         echo Html::tag('td', $user['id'], ['style' => 'text-align:center']);
