@@ -9,13 +9,6 @@ $this->params['breadcrumbs'][] = ['label' => 'Пользователи', 'url' =
 $this->params['breadcrumbs'][] = $this->title;
 
 $auth = \Yii::$app->authManager;
-$as = \backend\models\AuthSingleton::getInstance();
-$allPermissions = $as->getPermissions();//все возможные разрешения
-$allRoles = $as->getRoles();//все возможные роли
-$userPrivatePermissions = $as->getPrivatePermissionsByUser($user['id']);//разрешения, принадлежащие пользователю, а не его ролям
-$userPermissions = $as->getPermissionsByUser($user['id']);//все разрешения пользователя (включая унаследованные)
-$userOriginalPermissions = [];//все разрешения пользователя (без унаследованных) (массив строк)
-$userRoles = $as->getRolesByUser($user['id']);
 
 if (!(isset($roles_selector_type) && ($roles_selector_type == 'radio' || $roles_selector_type == 'checkbox'))) {
     $roles_selector_type = 'radio';
@@ -30,8 +23,8 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
 ?>
 
 <div style="background: white; border: solid 1px #e8e8e8; border-radius: 5px; padding: 5px">
-    <form method="post" action="<?= \yii\helpers\Url::to(['/rbac/index']) ?>">'
-
+    <form method="post" action="<?= \yii\helpers\Url::to(['/rbac/user']) ?>">'
+        <input type="hidden" name="id" value="<?= $user['id'] ?>">
         <div class="row">
             <div class="col-md-3">
                 <div class="list-group-item list-group-item-warning">Пользователь <?= $user['name'] ?></div>
@@ -42,8 +35,8 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
 
                 foreach ($user['roles'] as $userRole) {
 
-                    $treeBuilder->auth_item=$as->getAuthItem();
-                    $treeBuilder->tree=$as->getTree($userRole['role']);
+                    $treeBuilder->auth_item = $as->getAuthItem();
+                    $treeBuilder->tree = $as->getTree($userRole['role']);
                     /* заполняем разрешения, принадлежащие непосредственно роли, а не ее наследникам */
                     if (isset($treeBuilder->tree['roles'][$userRole['role']]['permissions']))
                         foreach ($treeBuilder->tree['roles'][$userRole['role']]['permissions'] as $key => $originalPermission) {
@@ -54,8 +47,8 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
 
                 foreach ($userPrivatePermissions as $permission) {
                     if ($as->isPermission($permission)) {
-                      //  $userPrivatePermissions[] = $permission;
-                        $treeBuilder->tree=$as->getTree($permission);
+                        //  $userPrivatePermissions[] = $permission;
+                        $treeBuilder->tree = $as->getTree($permission);
                     }
                 }
                 echo $treeBuilder->buildList($treeBuilder->tree);
@@ -85,7 +78,7 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                         || in_array($permission_name, $userOriginalPermissions)
                         || in_array($permission_name, $userPrivatePermissions) ? 'style="background: #d9edf7"' : '' ?>>
                             <td>
-                                <input name="private_roles[]"
+                                <input name="private_permissions[]"
                                        type="checkbox"
                                        value="<?= $permission_name ?>"
                                     <?= in_array($permission_name, $userPrivatePermissions) ? 'checked="checked"' : '' ?>>
@@ -121,7 +114,7 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                     <?php foreach ($allRoles as $role_name) : ?>
                         <tr>
                             <td>
-                                <input name="role[]"
+                                <input name="roles[]"
                                        value="<?= $role_name ?>"
                                        type="<?= $roles_selector_type ?>"
                                     <?= in_array($role_name, $userRoles) ? 'checked="checked"' : '' ?>

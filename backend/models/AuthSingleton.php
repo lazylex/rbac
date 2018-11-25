@@ -2,7 +2,6 @@
 
 namespace backend\models;
 
-
 /**
  * Class AuthSingleton
  * @package backend\models
@@ -11,7 +10,6 @@ namespace backend\models;
  * @property array $auth_item массив ролей и разрешений. В качестве ключа выступает имя роли или разрешения
  * @property array $auth_assignment массив ролей/разрешений пользователей. В качестве ключа выступает id пользователя
  * @property array $auth_item_child массив отношений родитель/потомок. В качестве ключа выступает имя родителя
- * @property array $user_permissions временный массив, необходимый функции getPermissionsByUser
  */
 class AuthSingleton
 {
@@ -20,8 +18,7 @@ class AuthSingleton
     private $tree = [];
     private $auth_item = [];
     private $auth_assignment = [];
-    private $auth_item_child=[];
-    private $user_permissions = [];
+    private $auth_item_child = [];
 
     /**
      * Функция для получения экземпляра данного класса
@@ -79,10 +76,10 @@ class AuthSingleton
      */
     public function fillAuthItemChild()
     {
-        $auth_item_childs=AuthItemChild::find()->select('*')->asArray()->all();
+        $auth_item_childs = AuthItemChild::find()->select('*')->asArray()->all();
 
         foreach ($auth_item_childs as $auth_item_child) {
-            $this->auth_item_child[$auth_item_child['parent']][]=$auth_item_child['child'];
+            $this->auth_item_child[$auth_item_child['parent']][] = $auth_item_child['child'];
         }
     }
 
@@ -108,30 +105,31 @@ class AuthSingleton
      */
     public function getPermissionsByUser($id)
     {
-        $this->user_permissions = [];
+        $user_permissions = [];
         foreach ($this->auth_assignment[$id] as $item) {
             if ($this->isPermission($item))
-                $this->user_permissions[] = $item;
-            $this->getPermissionsByItem($item);
+                $user_permissions[] = $item;
+            $this->getPermissionsByItem($item, $user_permissions);
         }
 
-        return $this->user_permissions;
+        return $user_permissions;
     }
 
     /**
      * Рекурсивная функция поиска разрешений
-     * @param $parent элемент, для которого необходимо найти разрешения
+     * @param string $parent элемент, для которого необходимо найти разрешения
+     * @param array $user_permissions массив разрешений роли/разрешения
      */
-    private function getPermissionsByItem($parent)
+    private function getPermissionsByItem($parent, &$user_permissions)
     {
         $childs = $this->getChildren($parent);
         if (is_null($childs))
             return;
         foreach ($childs as $child) {
             if ($this->isPermission($child)) {
-                $this->user_permissions[] = $child;
+                $user_permissions[] = $child;
             }
-            $this->getPermissionsByItem($child);
+            $this->getPermissionsByItem($child, $user_permissions);
         }
     }
 
@@ -145,7 +143,6 @@ class AuthSingleton
         foreach ($this->auth_assignment[$id] as $item) {
             if ($this->isRole($item))
                 $user_roles[] = $item;
-
         }
         return $user_roles;
     }
@@ -307,17 +304,14 @@ class AuthSingleton
      */
     private function getChildren($parent)
     {
-       if(isset($this->auth_item_child[$parent])&&count($this->auth_item_child[$parent])>0)
-       {
-           $result=[];
-           foreach ($this->auth_item_child[$parent] as $child)
-           {
-               $result[]=$child;
-           }
-           return $result;
-       }
-       else
-           return null;
+        if (isset($this->auth_item_child[$parent]) && count($this->auth_item_child[$parent]) > 0) {
+            $result = [];
+            foreach ($this->auth_item_child[$parent] as $child) {
+                $result[] = $child;
+            }
+            return $result;
+        } else
+            return null;
     }
 
     /**

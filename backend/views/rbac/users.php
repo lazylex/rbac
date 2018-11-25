@@ -12,7 +12,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php
     $status[\common\models\User::STATUS_ACTIVE] = Html::tag('span', 'Активен', ['class' => 'label label-success']);
     $status[\common\models\User::STATUS_DELETED] = Html::tag('span', 'Удален', ['class' => 'label label-danger']);
-    //echo Html::beginTag('form',['action'=>'user','mathod'=>'post']);
     echo Html::beginTag('table', ['class' => 'table table-striped table-bordered table-hover']);
     echo Html::beginTag('thead', ['style' => 'background: gray']);
     echo Html::tag('th', 'ID', ['style' => 'text-align:center']);
@@ -24,7 +23,6 @@ $this->params['breadcrumbs'][] = $this->title;
     echo Html::tag('th', 'Редактировать', ['style' => 'text-align:center']);
     echo Html::endTag('thead');
     echo Html::beginTag('tbody', ['style' => 'background: lightgray']);
-    //echo '<pre>'.print_r($users,true).'</pre>';die;
     foreach ($users as $user) {
         $change_user;
 
@@ -34,11 +32,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 $roles .= Html::tag('li', $role);
             }
         }
-        // $roles == Html::tag('ul', $roles);
+        else
+            continue;
 
         $permissions = '';
-//        echo '<pre>'.print_r($user['permissions']).'</pre>';
-//        die;
         foreach ($user['permissions'] as $permission) {
 
             //кроме главного никто не должен знать название разрешения на полный доступ к изменению ролей
@@ -47,7 +44,6 @@ $this->params['breadcrumbs'][] = $this->title;
             $permissions .= Html::tag('li', $permission['name'] . '<i> (' . $permission['description'] . ')</i>');
         }
         $permissions = Html::tag('ul', $permissions);
-
 
         if (\Yii::$app->user->can('changeAllRoles') || \Yii::$app->user->can('changeRole', ['roles' => $user['roles']])) {
             $change_user = Html::tag('a', Html::tag('span', '', ['class' => 'glyphicon glyphicon-pencil']) . ' Редактировать',
@@ -73,8 +69,6 @@ $this->params['breadcrumbs'][] = $this->title;
     }
     echo Html::endTag('tbody');
     echo Html::endTag('table');
-    //echo Html::endTag('form');
     ?>
-
 
 </div>

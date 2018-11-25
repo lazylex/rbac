@@ -14,6 +14,7 @@ use backend\models\AuthItem;
 use backend\models\AuthItemChild;
 use backend\models\AuthRule;
 use backend\models\AuthSingleton;
+use backend\models\UserRolesAndPermissions;
 use common\models\User;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -61,26 +62,24 @@ class RbacController extends Controller
     public function actionRole()
     {
         $as = AuthSingleton::getInstance();
-        $name=\Yii::$app->request->get('name');//поменять на пост (не забыть поменять и ссылки в виде ролей)
-        if($name == null||!$as->isRole($name))
-        {
+        $name = \Yii::$app->request->get('name');//поменять на пост (не забыть поменять и ссылки в виде ролей)
+        if ($name == null || !$as->isRole($name)) {
             \Yii::$app->session->setFlash('error', "Роль не выбрана или не существует");
             return $this->redirect('roles');
         }
-        return $this->render('role',['name'=>$name]);
+        return $this->render('role', ['name' => $name]);
     }
 
     public function actionRoles()
     {
         $as = AuthSingleton::getInstance();
-        $all_roles=$as->getRoles();
-        foreach ($all_roles as $role)
-        {
-            $roles[$role]['description']=$as->getItemDescription($role);
-            $roles[$role]['rule']=$as->getItemRule($role);
+        $all_roles = $as->getRoles();
+        foreach ($all_roles as $role) {
+            $roles[$role]['description'] = $as->getItemDescription($role);
+            $roles[$role]['rule'] = $as->getItemRule($role);
         }
         //echo '<pre>'.print_r($roles).'</pre>';die;
-        return $this->render('roles',['roles'=>$roles]);
+        return $this->render('roles', ['roles' => $roles]);
     }
 
     public function actionUser()
@@ -91,16 +90,36 @@ class RbacController extends Controller
             \Yii::$app->session->setFlash('error', "Пользователь не выбран или не существует");
             return $this->redirect('users');
         }
-        $user['name'] = $identity->username;
+        $private_permissions = \Yii::$app->request->post('private_permissions');
+        $roles = \Yii::$app->request->post('roles');
+        if (isset($private_permissions) || isset($roles)) {// || потому, что даже роли можно пользователя лишить
+            //echo 'die';die;
+            $urar = new UserRolesAndPermissions();
+            $urar->setUserById($id);
+            $urar->setUserRoles($roles);
+            $urar->setUserPrivatePermissions($private_permissions);
 
-        $roles = \Yii::$app->authManager->getRolesByUser($id);
-        if (count($roles) > 0) {
-            foreach ($roles as $role)
+            return $this->redirect('users');
+        }
+
+
+        $user['name'] = $identity->username;
+        $as = AuthSingleton::getInstance();
+        $allPermissions = $as->getPermissions();//все возможные разрешения
+        $allRoles = $as->getRoles();//все возможные роли
+        $userPrivatePermissions = $as->getPrivatePermissionsByUser($id);//разрешения, принадлежащие пользователю, а не его ролям
+        $userPermissions = $as->getPermissionsByUser($id);//все разрешения пользователя (включая унаследованные)
+        $userOriginalPermissions = [];//все разрешения пользователя (без унаследованных) (массив строк)
+        $userRoles = $as->getRolesByUser($id);
+
+        //$roles = $as->getRolesByUser($id);
+        if (count($userRoles) > 0) {
+            foreach ($userRoles as $role)
                 $user['roles'][] =
                     [
-                        'role' => $role->name,
-                        'description' => $role->description,
-                        'rule' => $role->ruleName
+                        'role' => $role,
+                        'description' => $as->getItemDescription($role),
+                        'rule' => $as->getItemRule($role)
                     ];
         } else
             $user['roles'] = [];
@@ -108,7 +127,18 @@ class RbacController extends Controller
         /* При запрете на владение пользователем многими ролями, в roles_selector_type передать radio
         или вообще не передавать эту переменную. При разрешении на владение многими ролями передать checkbox
          */
-        return $this->render('user', ['user' => $user, 'roles_selector_type' => 'checkbox']);
+        return $this->render('user',
+            [
+                'user' => $user,
+                'roles_selector_type' => 'checkbox',
+                'allPermissions' => $allPermissions,
+                'allRoles' => $allRoles,
+                'userPrivatePermissions' => $userPrivatePermissions,
+                'userPermissions' => $userPermissions,
+                'userOriginalPermissions' => $userOriginalPermissions,
+                'userRoles' => $userRoles,
+                'as' => $as,
+            ]);
     }
 
     public function actionUsers()
@@ -153,9 +183,9 @@ class RbacController extends Controller
         $role_deputy = $auth->getRole('Владелец');
         //$role_deputy->description = 'Владелец домена';
         //$auth->add($role_deputy);
-$per=$auth->createPermission('Зарплата');
-$per->description='Платить зарплату';
-$auth->add($per);
+        $per = $auth->createPermission('Зарплата');
+        $per->description = 'Платить зарплату';
+        $auth->add($per);
         //$auth->addChild($auth->getRole('Консильери'),$role_deputy);
 
         //$auth->addChild($role_deputy,$auth->getPermission('boy'));//даем заместителю разрешение на создание ролей
@@ -163,7 +193,7 @@ $auth->add($per);
         //$pizza = $auth->getPermission('pizza');
 
         //$auth->addChild($pizza, $role_deputy);
-$auth->addChild($role_deputy,$per);
+        $auth->addChild($role_deputy, $per);
 
         echo 'new';
     }
