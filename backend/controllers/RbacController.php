@@ -8,7 +8,6 @@
 
 namespace backend\controllers;
 
-
 use backend\models\AuthAssignment;
 use backend\models\AuthItem;
 use backend\models\AuthItemChild;
@@ -16,10 +15,8 @@ use backend\models\AuthRule;
 use backend\models\AuthSingleton;
 use backend\models\UserRolesAndPermissions;
 use common\models\User;
-use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\web\Controller;
-
+use yii\db\Query;
 class RbacController extends Controller
 {
 
@@ -43,7 +40,7 @@ class RbacController extends Controller
     public function actionIndex()
     {
         $role_count = count(\Yii::$app->authManager->getRoles());
-        $user_count = (new \yii\db\Query())->select('id')->from('user')->count();
+        $user_count = (new Query())->select('id')->from('user')->count();
         $auth_assignment_count = AuthAssignment::find()->count();
         $auth_item_count = AuthItem::find()->count();
         $auth_item_child_count = AuthItemChild::find()->count();
@@ -94,7 +91,6 @@ class RbacController extends Controller
         $private_permissions = \Yii::$app->request->post('private_permissions');
         $roles = \Yii::$app->request->post('roles');
         if (isset($private_permissions) || isset($roles)/*||\Yii::$app->requestedRoute=='rbac/user'*/) {// || потому, что даже роли можно пользователя лишить
-            //echo 'die';die;
             $urap = new UserRolesAndPermissions();
             $urap->setUserById($id);
             $urap->setUserRoles($roles);
@@ -102,7 +98,6 @@ class RbacController extends Controller
 
             return $this->redirect('users');
         }
-
 
         $user['name'] = $identity->username;
         $as = AuthSingleton::getInstance();
@@ -113,7 +108,6 @@ class RbacController extends Controller
         $userOriginalPermissions = [];//все разрешения пользователя (без унаследованных) (массив строк)
         $userRoles = $as->getRolesByUser($id);
 
-        //$roles = $as->getRolesByUser($id);
         if (count($userRoles) > 0) {
             foreach ($userRoles as $role)
                 $user['roles'][] =
@@ -131,7 +125,7 @@ class RbacController extends Controller
         return $this->render('user',
             [
                 'user' => $user,
-                'roles_selector_type' => 'checkbox',
+                'roles_selector_type' => 'radio',
                 'allPermissions' => $allPermissions,
                 'allRoles' => $allRoles,
                 'userPrivatePermissions' => $userPrivatePermissions,

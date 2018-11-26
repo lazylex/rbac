@@ -8,6 +8,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $num = 1;
 ?>
 <div style="background: white; width: 50%; margin: auto">
+
     <table class="table">
         <thead class="thead-default">
         <tr>
@@ -23,12 +24,12 @@ $num = 1;
                 <td>
                     <?php
                     if ($role != 'Главный'):?>
-                        <a class="btn btn-primary" style="width: 200px"
+                        <a class="btn btn-primary" style="width: 200px; text-align: left"
                            href="<?= \yii\helpers\Url::to(['rbac/role', 'name' => $role]) ?>">
                             <span class="glyphicon glyphicon-pencil"></span> <?= $role ?>
                         </a>
                     <?php elseif (\Yii::$app->user->can('changeAllRoles')): ?>
-                        <a class="btn btn-primary" style="width: 200px"
+                        <a class="btn btn-primary" style="width: 200px; text-align: left"
                            href="<?= \yii\helpers\Url::to(['rbac/role', 'name' => $role]) ?>">
                             <span class="glyphicon glyphicon-pencil"></span> <?= $role ?>
                         </a>
@@ -42,5 +43,11 @@ $num = 1;
             </tr>
 
         <?php endforeach; ?>
+        <tr>
+            <td></td>
+            <td>
+                <a class="btn btn-success" style="width: 200px"><span class="glyphicon glyphicon-plus"> Создать новую роль</a>
+            </td>
+        </tr>
     </table>
 </div>

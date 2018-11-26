@@ -15,8 +15,7 @@ use yii\base\Model;
  * Class UserRolesAndPermissions
  * @package backend\models
  * @property integer $id идентификатор пользователя
- * @property AuthSingleton as вспомогательная модель для работы с RBAC
- * @var AuthSingleton $as
+ * @var AuthSingleton $as вспомогательная модель для работы с RBAC
  */
 class UserRolesAndPermissions extends Model
 {
@@ -41,7 +40,7 @@ class UserRolesAndPermissions extends Model
         $all_permissions = $this->as->getPermissions();
         $current_permissions = $this->as->getPrivatePermissionsByUser($this->id);
         $all_user_permissions = $this->as->getPermissionsByUser($this->id);
-        //echo '<pre>'.print_r($permissions,true).'</pre>';die;
+
         if (is_null($permissions)) {
             foreach ($current_permissions as $permission) {
                 $auth->revoke($auth->getPermission($permission), $this->id);
@@ -66,15 +65,15 @@ class UserRolesAndPermissions extends Model
      */
     public function setUserRoles($roles)
     {
-
         $auth = \Yii::$app->authManager;
         $all_roles = $this->as->getRoles();
         $all_user_roles = $this->as->getRolesByUser($this->id);
-        if (is_null($roles)||count($roles)==0) {
+        if (is_null($roles) || count($roles) == 0 || (count($roles) == 1 && $roles[0] == 'Default')) {
             foreach ($all_user_roles as $role) {
                 $auth->revoke($auth->getRole($role), $this->id);
             }
             $auth->assign($auth->getRole('Default'), $this->id);
+            return;
         } else {
             foreach ($all_user_roles as $role) {
                 if (!in_array($role, $roles)) {
@@ -87,18 +86,9 @@ class UserRolesAndPermissions extends Model
                     $auth->assign($auth->getRole($role), $this->id);
                 }
             }
-            if (in_array('Главный', $roles) && \Yii::$app->user->can('changeAllRoles')) {
+            if (!in_array('Главный', $all_user_roles) && in_array('Главный', $roles) && \Yii::$app->user->can('changeAllRoles')) {
                 $auth->assign($auth->getRole('Главный'), $this->id);
             }
-
-        }
-        $this->as->fillAuthAssignment();
-        $all_user_roles = $this->as->getRolesByUser($this->id);
-        if (count($all_user_roles) > 1 && in_array('Default', $all_user_roles)) {
-            $auth->revoke($auth->getRole('Default'), $this->id);
-        }
-        if (count($all_user_roles) ==0) {
-            $auth->revoke($auth->getRole('Default'), $this->id);
         }
     }
 }

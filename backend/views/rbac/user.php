@@ -118,6 +118,9 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                                        value="<?= $role_name ?>"
                                        type="<?= $roles_selector_type ?>"
                                     <?= in_array($role_name, $userRoles) ? 'checked="checked"' : '' ?>
+                                    <?php if ($role_name == 'Главный' && (!\Yii::$app->user->can('changeAllRoles')))
+                                        echo 'disabled="disabled"';
+                                    ?>
                                 >
                             </td>
                             <td><?= $role_name ?></td>
@@ -125,16 +128,7 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                             <td><?= $as->getItemRule($role_name) ?></td>
                         </tr>
                     <?php endforeach; ?>
-                    <?php if ($roles_selector_type == 'radio') : ?>
-                        <tr>
-                            <td>
-                                <input name="role[]" value="" type="<?= $roles_selector_type ?>">
-                            </td>
-                            <td>Default</td>
-                            <td>Роль по умолчанию. Не содержит разрешений</td>
-                            <td></td>
-                        </tr>
-                    <?php endif; ?>
+
 
 
                 </table>

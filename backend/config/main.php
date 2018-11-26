@@ -47,4 +47,5 @@ return [
 
     ],
     'params' => $params,
+    'name'=>'Backend of serious project',
 ];
