@@ -105,6 +105,8 @@ class AuthSingleton
      */
     public function getPermissionsByUser($id)
     {
+        if(!isset($this->auth_assignment[$id]))
+            return [];
         $user_permissions = [];
         foreach ($this->auth_assignment[$id] as $item) {
             if ($this->isPermission($item))
@@ -139,6 +141,8 @@ class AuthSingleton
      */
     public function getRolesByUser($id)
     {
+        if(!isset($this->auth_assignment[$id]))
+            return [];
         $user_roles = [];
         foreach ($this->auth_assignment[$id] as $item) {
             if ($this->isRole($item))

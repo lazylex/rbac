@@ -55,7 +55,7 @@ class UserRolesAndPermissions extends Model
             /* не мешало бы реализовать запрет на присвоение разрешения, которое содержит в себе присвоеное разрешение */
             foreach ($permissions as $permission) {
                 if (!in_array($permission, $all_user_permissions) && in_array($permission, $all_permissions) && $permission != 'changeAllRoles') {
-                    $auth->assign($auth->getPermission( $permission), $this->id);
+                    $auth->assign($auth->getPermission($permission), $this->id);
                 }
             }
         }
@@ -66,18 +66,16 @@ class UserRolesAndPermissions extends Model
      */
     public function setUserRoles($roles)
     {
+
         $auth = \Yii::$app->authManager;
-        $all_roles=$this->as->getRoles();
-        $all_user_roles=$this->as->getRolesByUser($this->id);
-        if(is_null($roles))
-        {
-            foreach ($all_user_roles as $role)
-            {
-                $auth->revoke($auth->getRole($role),$this->id);
+        $all_roles = $this->as->getRoles();
+        $all_user_roles = $this->as->getRolesByUser($this->id);
+        if (is_null($roles)||count($roles)==0) {
+            foreach ($all_user_roles as $role) {
+                $auth->revoke($auth->getRole($role), $this->id);
             }
-        }
-        else
-        {
+            $auth->assign($auth->getRole('Default'), $this->id);
+        } else {
             foreach ($all_user_roles as $role) {
                 if (!in_array($role, $roles)) {
                     $auth->revoke($auth->getRole($role), $this->id);
@@ -86,13 +84,21 @@ class UserRolesAndPermissions extends Model
 
             foreach ($roles as $role) {
                 if (!in_array($role, $all_user_roles) && in_array($role, $all_roles) && $role != 'Главный') {
-                    $auth->assign($auth->getRole( $role), $this->id);
+                    $auth->assign($auth->getRole($role), $this->id);
                 }
             }
-            if(in_array('Главный',$roles)&&\Yii::$app->user->can('changeAllRoles'))
-            {
-                $auth->assign($auth->getRole( 'Главный'), $this->id);
+            if (in_array('Главный', $roles) && \Yii::$app->user->can('changeAllRoles')) {
+                $auth->assign($auth->getRole('Главный'), $this->id);
             }
+
+        }
+        $this->as->fillAuthAssignment();
+        $all_user_roles = $this->as->getRolesByUser($this->id);
+        if (count($all_user_roles) > 1 && in_array('Default', $all_user_roles)) {
+            $auth->revoke($auth->getRole('Default'), $this->id);
+        }
+        if (count($all_user_roles) ==0) {
+            $auth->revoke($auth->getRole('Default'), $this->id);
         }
     }
 }

@@ -108,6 +108,11 @@ class m181110_063522_init_superuser_and_main_roles extends Migration
 
         $auth->assign($role_deputy, $user_deputy->getId());
         $auth->assign($role_manager, $user_manager->getId());
+
+        /* Создаю роль по умолчанию */
+        $role_default = $auth->createRole('Default');
+        $role_default->description = 'Роль по умолчанию. Не содержит разрешений';
+        $auth->add($role_default);
     }
 
     /**

@@ -84,6 +84,7 @@ class RbacController extends Controller
 
     public function actionUser()
     {
+        //echo \Yii::$app->requestedRoute; die;
         $id = \Yii::$app->request->post('id');
         $identity = User::findIdentity($id);
         if ($identity == null) {
@@ -92,12 +93,12 @@ class RbacController extends Controller
         }
         $private_permissions = \Yii::$app->request->post('private_permissions');
         $roles = \Yii::$app->request->post('roles');
-        if (isset($private_permissions) || isset($roles)) {// || потому, что даже роли можно пользователя лишить
+        if (isset($private_permissions) || isset($roles)/*||\Yii::$app->requestedRoute=='rbac/user'*/) {// || потому, что даже роли можно пользователя лишить
             //echo 'die';die;
-            $urar = new UserRolesAndPermissions();
-            $urar->setUserById($id);
-            $urar->setUserRoles($roles);
-            $urar->setUserPrivatePermissions($private_permissions);
+            $urap = new UserRolesAndPermissions();
+            $urap->setUserById($id);
+            $urap->setUserRoles($roles);
+            $urap->setUserPrivatePermissions($private_permissions);
 
             return $this->redirect('users');
         }
@@ -180,12 +181,12 @@ class RbacController extends Controller
 
 
         /* Создаю роль заместителя */
-        $role_deputy = $auth->getRole('Владелец');
-        //$role_deputy->description = 'Владелец домена';
+        $role_deputy = $auth->createRole('Default');
+        $role_deputy->description = 'Роль по умолчанию. Не содержит разрешений';
         //$auth->add($role_deputy);
-        $per = $auth->createPermission('Зарплата');
-        $per->description = 'Платить зарплату';
-        $auth->add($per);
+        //$per = $auth->createPermission('Зарплата');
+        //$per->description = 'Платить зарплату';
+        $auth->add($role_deputy);
         //$auth->addChild($auth->getRole('Консильери'),$role_deputy);
 
         //$auth->addChild($role_deputy,$auth->getPermission('boy'));//даем заместителю разрешение на создание ролей
@@ -193,7 +194,7 @@ class RbacController extends Controller
         //$pizza = $auth->getPermission('pizza');
 
         //$auth->addChild($pizza, $role_deputy);
-        $auth->addChild($role_deputy, $per);
+        //$auth->addChild($role_deputy, $per);
 
         echo 'new';
     }

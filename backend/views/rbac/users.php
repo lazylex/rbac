@@ -36,6 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
             continue;
 
         $permissions = '';
+        if(isset($user['permissions']))
         foreach ($user['permissions'] as $permission) {
 
             //кроме главного никто не должен знать название разрешения на полный доступ к изменению ролей

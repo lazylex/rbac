@@ -130,8 +130,8 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                             <td>
                                 <input name="role[]" value="" type="<?= $roles_selector_type ?>">
                             </td>
-                            <td>Роли отсутствуют</td>
-                            <td>Пользователю не присвоено ни одной роли</td>
+                            <td>Default</td>
+                            <td>Роль по умолчанию. Не содержит разрешений</td>
                             <td></td>
                         </tr>
                     <?php endif; ?>
