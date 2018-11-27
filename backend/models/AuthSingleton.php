@@ -225,7 +225,7 @@ class AuthSingleton
 
     /**
      * Функция возвращает дерево ролей/разрешений (массив $tree)
-     * @param $parent элемент, для которого необходимо вернуть дерево
+     * @param string $parent элемент, для которого необходимо вернуть дерево
      * @return array дерево ролей/разрешений
      */
     public function getTree($parent)
@@ -237,7 +237,7 @@ class AuthSingleton
 
     /**
      * Функция возвращает ветвь дерева ролей/разрешений (из массива $tree)
-     * @param $parent элемент, являющийся корнем ветви
+     * @param string $parent элемент, являющийся корнем ветви
      * @return array ветвь дерева ролей/разрешений
      */
     public function getBranch($parent)

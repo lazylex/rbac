@@ -56,6 +56,11 @@ class RbacController extends Controller
             ]);
     }
 
+    public function actionCreateRole()
+    {
+       return $this->render('create-role');
+    }
+
     public function actionRole()
     {
         $as = AuthSingleton::getInstance();

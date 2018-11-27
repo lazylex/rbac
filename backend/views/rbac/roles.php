@@ -46,7 +46,8 @@ $num = 1;
         <tr>
             <td></td>
             <td>
-                <a class="btn btn-success" style="width: 200px"><span class="glyphicon glyphicon-plus"> Создать новую роль</a>
+                <a class="btn btn-success" style="width: 200px"
+                href="<?= \yii\helpers\Url::to(['rbac/create-role']) ?>">Создать новую роль</a>
             </td>
         </tr>
     </table>
