@@ -25,8 +25,9 @@ $num = 1;
                     <?php
                     if ($role != 'Главный'):?>
                         <a class="btn btn-primary" style="width: 200px; text-align: left"
-                           href="<?= \yii\helpers\Url::to(['rbac/role', 'name' => $role]) ?>">
-                            <span class="glyphicon glyphicon-pencil"></span> <?= $role ?>
+                        <?= $role == 'Default' ? 'disabled="disabled">' : 'href="' . \yii\helpers\Url::to(['rbac/role', 'name' => $role]) . '">' ?>
+
+                        <span class="glyphicon glyphicon-pencil"></span> <?= $role ?>
                         </a>
                     <?php elseif (\Yii::$app->user->can('changeAllRoles')): ?>
                         <a class="btn btn-primary" style="width: 200px; text-align: left"
@@ -47,7 +48,7 @@ $num = 1;
             <td></td>
             <td>
                 <a class="btn btn-success" style="width: 200px"
-                href="<?= \yii\helpers\Url::to(['rbac/create-role']) ?>">Создать новую роль</a>
+                   href="<?= \yii\helpers\Url::to(['rbac/create-role']) ?>">Создать новую роль</a>
             </td>
         </tr>
     </table>

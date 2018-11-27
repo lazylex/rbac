@@ -9,6 +9,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $as = \backend\models\AuthSingleton::getInstance();
 $all_roles = $as->getRoles();
 $all_permissions = $as->getPermissions();
+$all_rules =$as->getRules();
 if (!\Yii::$app->user->can('changeAllRoles')) {
     if (($key = array_search('changeAllRoles', $all_permissions)) !== false) {
         unset($all_permissions[$key]);
@@ -16,6 +17,9 @@ if (!\Yii::$app->user->can('changeAllRoles')) {
     if (($key = array_search('Главный', $all_roles)) !== false) {
         unset($all_roles[$key]);
     }
+}
+if (($key = array_search('Default', $all_roles)) !== false) {
+    unset($all_roles[$key]);
 }
 ?>
 
@@ -26,7 +30,7 @@ if (!\Yii::$app->user->can('changeAllRoles')) {
                 <label>Название роли</label>
             </td>
             <td>
-                <input type="text" name="role_name" size="30">
+                <input type="text" name="role_name" size="64" required="required">
             </td>
         </tr>
         <tr>
@@ -34,12 +38,25 @@ if (!\Yii::$app->user->can('changeAllRoles')) {
                 <label>Описание роли</label>
             </td>
             <td>
-                <input type="text" name="role_description" size="30">
+                <input type="text" name="role_description" size="128">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Правило</label>
+            </td>
+            <td>
+                <select name="rule">
+                    <option value="" selected="selected">Отсутствует</option>
+                    <?php foreach ($all_rules as $key=>$rule):?>
+                        <option value="<?= $rule ?>"><?= $rule ?></option>
+                    <?php endforeach; ?>
+                </select>
             </td>
         </tr>
     </table>
 
-    <div>Наследуемые разрешения:</div>
+    <div><label>Наследуемые разрешения:</label></div>
     <table class="table">
         <thead>
         <th style="width: 10%">Активно</th>
@@ -55,7 +72,7 @@ if (!\Yii::$app->user->can('changeAllRoles')) {
         <?php endforeach; ?>
     </table>
 
-    <div>Наследуемые роли:</div>
+    <div><label>Наследуемые роли:</label></div>
     <table class="table">
         <thead>
         <th style="width: 10%">Активно</th>

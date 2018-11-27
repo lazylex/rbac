@@ -19,6 +19,7 @@ class AuthSingleton
     private $auth_item = [];
     private $auth_assignment = [];
     private $auth_item_child = [];
+    private $auth_rule = [];
 
     /**
      * Функция для получения экземпляра данного класса
@@ -40,6 +41,18 @@ class AuthSingleton
         $this->fillAuthItem();
         $this->fillAuthAssignment();
         $this->fillAuthItemChild();
+        $this->fillAuthRule();
+    }
+
+    /**
+     * заполняем таблицу с правилами
+     */
+    public function fillAuthRule()
+    {
+        $auth_rule = AuthRule::find()->select(['name'])->asArray()->all();
+        foreach ($auth_rule as $value) {
+            $this->auth_rule[] = $value['name'];
+        }
     }
 
     /**
@@ -105,7 +118,7 @@ class AuthSingleton
      */
     public function getPermissionsByUser($id)
     {
-        if(!isset($this->auth_assignment[$id]))
+        if (!isset($this->auth_assignment[$id]))
             return [];
         $user_permissions = [];
         foreach ($this->auth_assignment[$id] as $item) {
@@ -141,7 +154,7 @@ class AuthSingleton
      */
     public function getRolesByUser($id)
     {
-        if(!isset($this->auth_assignment[$id]))
+        if (!isset($this->auth_assignment[$id]))
             return [];
         $user_roles = [];
         foreach ($this->auth_assignment[$id] as $item) {
@@ -175,6 +188,19 @@ class AuthSingleton
         foreach ($this->auth_item as $key => $item) {
             if ($item['type'] == 2)
                 $result[] = $key;
+        }
+        return $result;
+    }
+
+    /** Функция возвращает все существующие правила
+     * @return array все правила
+     */
+    public function getRules()
+    {
+        $result=[];
+        foreach ($this->auth_rule as $key=>$item)
+        {
+            $result[]=$item;
         }
         return $result;
     }
