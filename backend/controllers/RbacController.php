@@ -87,8 +87,13 @@ class RbacController extends Controller
             if ($model->description != '') {
                 $new_role->description = $model->description;
             }
+            $rule = \Yii::$app->request->post('rule');
+            if (!is_null($rule) && in_array($rule, $as->getRules())) {
+                $new_role->ruleName=$rule;
+            }
             $auth->add($new_role);
             $roles = \Yii::$app->request->post('roles');
+
             if (!is_null($roles)) {
                 foreach ($roles as $role) {
                     if ($role == 'Главный') {
@@ -115,10 +120,6 @@ class RbacController extends Controller
                         }
                     }
                 }
-            }
-            $rule = \Yii::$app->request->post('rule');
-            if (!is_null($rule) && in_array($rule, $as->getRules())) {
-                $auth->addChild($new_role, $rule);
             }
             \Yii::$app->session->setFlash('success', "Роль {$model->name} успешно создана");
             return $this->redirect('roles');
