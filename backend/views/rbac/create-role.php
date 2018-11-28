@@ -22,39 +22,21 @@ if (($key = array_search('Default', $all_roles)) !== false) {
     unset($all_roles[$key]);
 }
 ?>
+    <div style="background: white; border-radius: 5px; padding: 10px">
+<?php $form=\yii\bootstrap\ActiveForm::begin();
+?>
 
-<form method="post" style="background: white; border-radius: 5px; padding: 10px">
-    <table class="table">
-        <tr>
-            <td style="width: 10%">
-                <label>Название роли</label>
-            </td>
-            <td>
-                <input type="text" name="role_name" size="64" required="required">
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <label>Описание роли</label>
-            </td>
-            <td>
-                <input type="text" name="role_description" size="128">
-            </td>
-        </tr>
-        <tr>
-            <td>
+
+
+                <?= $form->field($model,'name')->textInput()->label('Название роли') ?>
+                <?= $form->field($model,'description')->textInput()->label('Описание роли') ?>
                 <label>Правило</label>
-            </td>
-            <td>
                 <select name="rule">
                     <option value="" selected="selected">Отсутствует</option>
                     <?php foreach ($all_rules as $key=>$rule):?>
                         <option value="<?= $rule ?>"><?= $rule ?></option>
                     <?php endforeach; ?>
                 </select>
-            </td>
-        </tr>
-    </table>
 
     <div><label>Наследуемые разрешения:</label></div>
     <table class="table">
@@ -91,5 +73,6 @@ if (($key = array_search('Default', $all_roles)) !== false) {
         <button type="submit" class="btn btn-success">Создать роль</button>
         <button type="reset" class="btn btn-danger">Сброс</button>
     </div>
-    <input type="hidden" name="_csrf-backend" value="<?= Yii::$app->request->getCsrfToken() ?>">
-</form>
+
+<?php $form::end();?>
+    </div>

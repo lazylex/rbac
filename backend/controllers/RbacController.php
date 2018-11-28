@@ -17,6 +17,8 @@ use backend\models\UserRolesAndPermissions;
 use common\models\User;
 use yii\web\Controller;
 use yii\db\Query;
+use yii\base\DynamicModel;
+
 class RbacController extends Controller
 {
 
@@ -58,7 +60,71 @@ class RbacController extends Controller
 
     public function actionCreateRole()
     {
-       return $this->render('create-role');
+        $model = new DynamicModel(['name', 'description']);
+
+        $model
+            ->addRule(['name'], 'required', ['message' => 'Необходимо ввести название роли'])
+            ->addRule('name', 'string',
+                [
+                    'max' => 64,
+                    'min' => 3,
+                    'tooLong' => 'Название роли не может быть длиннее 64 символов',
+                    'tooShort' => 'Название роли не может быть короче трех символов'
+                ])
+            ->addRule('description', 'string',
+                [
+                    'max' => 128,
+                    'min' => 3,
+                    'tooLong' => 'Описание не может быть длиннее 128 символов',
+                    'tooShort' => 'Описание не может быть короче трех символов'
+                ]);
+
+        if ($model->load(\Yii::$app->request->post()) && $model->validate()) {
+            // проводим любые действия
+            $as = AuthSingleton::getInstance();
+            $auth = \Yii::$app->authManager;
+            $new_role = $auth->createRole($model->name);
+            if ($model->description != '') {
+                $new_role->description = $model->description;
+            }
+            $auth->add($new_role);
+            $roles = \Yii::$app->request->post('roles');
+            if (!is_null($roles)) {
+                foreach ($roles as $role) {
+                    if ($role == 'Главный') {
+                        if (\Yii::$app->user->can('changeAllRoles')) {
+                            $auth->addChild($new_role, $auth->getRole($role));//если разрешат наследовать роль главного
+                        }
+                    } else {
+                        if ($as->isRole($role)) {
+                            $auth->addChild($new_role, $auth->getRole($role));
+                        }
+                    }
+                }
+            }
+            $permissions = \Yii::$app->request->post('permissions');
+            if (!is_null($permissions)) {
+                foreach (\Yii::$app->request->post('permissions') as $permission) {
+                    if ($permission == 'changeAllRoles') {
+                        if (\Yii::$app->user->can('changeAllRoles')) {
+                            $auth->addChild($new_role, $auth->getPermission($permission));//если разрешат наследовать
+                        }
+                    } else {
+                        if ($as->isPermission($permission)) {
+                            $auth->addChild($new_role, $auth->getPermission($permission));
+                        }
+                    }
+                }
+            }
+            $rule = \Yii::$app->request->post('rule');
+            if (!is_null($rule) && in_array($rule, $as->getRules())) {
+                $auth->addChild($new_role, $rule);
+            }
+            \Yii::$app->session->setFlash('success', "Роль {$model->name} успешно создана");
+            return $this->redirect('roles');
+        }
+
+        return $this->render('create-role', ['model' => $model]);
     }
 
     public function actionRole()
