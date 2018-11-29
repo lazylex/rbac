@@ -25,8 +25,8 @@ if (($key = array_search('Default', $all_roles)) !== false) {
 <div style="background: white; border-radius: 5px; padding: 10px">
     <?php
     $form = \yii\bootstrap\ActiveForm::begin();
-    echo $form->field($model, 'name')->textInput()->label('Название роли');
-    echo $form->field($model, 'description')->textInput()->label('Описание роли')
+    echo $form->field($model, 'name')->textInput();
+    echo $form->field($model, 'description')->textInput();
     ?>
     <label>Правило</label>
     <select name="rule">

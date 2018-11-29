@@ -14,12 +14,14 @@ class changeRoleRule extends Rule
 
         if (isset($params['roles'])) {
 
-            foreach ($params['roles'] as $role)
-                if ($role == 'Главный'||$role == 'Заместитель')
+            foreach ($params['roles'] as $role) {
+                if ($role == 'Главный' || $role == 'Заместитель') {
                     return false;
-        }
-        else
+                }
+            }
+        } else {
             return false;
+        }
         return true;
     }
 }

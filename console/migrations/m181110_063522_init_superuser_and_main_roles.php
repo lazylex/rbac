@@ -16,16 +16,19 @@ class m181110_063522_init_superuser_and_main_roles extends Migration
      * проверка их корректности не производится
      */
 
+    //Пользователи создаются для отладки реализации rbac
+
+    //Данные для суперпользователя
     public $username = 'admin';
     public $email = 'ghostofcapitalism@gmail.com';
     public $password = 'letmein';
 
-    /* Данные зама */
+    // Данные зама
     public $username_deputy = 'deputy';
     public $email_deputy = 'lazylex@mail.ru';
     public $password_deputy = 'letmein13';
 
-    /* Данные менеджера */
+    // Данные менеджера
     public $username_manager = 'manager1';
     public $email_manager = 'leningrad@gmail.com';
     public $password_manager = 'leningrad';
@@ -74,7 +77,6 @@ class m181110_063522_init_superuser_and_main_roles extends Migration
         $changeRole->ruleName = $changeRoleRule->name;
         $auth->add($changeRole);
 
-
         /* Создаю разрешение на просмотр, удаление, редактирование статей */
         $articleFullAccess = $auth->createPermission('articleFullAccess');
         $articleFullAccess->description = 'Полный доступ к статьям';
@@ -86,17 +88,7 @@ class m181110_063522_init_superuser_and_main_roles extends Migration
         $role_superuser->description = 'Суперпользователь';
         $auth->add($role_superuser);
 
-        /* Создаю роль заместителя
-        $role_deputy = $auth->createRole('Заместитель');
-        $role_deputy->description = 'Заместитель';
-        $auth->add($role_deputy);*/
-
-        /* Создаю роль менеджера
-        $role_manager = $auth->createRole('Менеджер');
-        $role_manager->description = 'Менеджер';
-        $auth->add($role_manager);*/
-
-        // добавляем правило, определяющее, является ли пользователь автором
+         // добавляем правило, определяющее, является ли пользователь автором
         $changeArticleRule = new \backend\rules\changeArticleRule();
         $auth->add($changeArticleRule);
 
@@ -106,19 +98,9 @@ class m181110_063522_init_superuser_and_main_roles extends Migration
         $changeOwnArticle->ruleName = $changeArticleRule->name;
         $auth->add($changeOwnArticle);
 
-        //$auth->addChild($role_deputy, $createRole);//даем заместителю разрешение на создание ролей
-        //$auth->addChild($role_deputy, $changeRole);//даем заместителю разрешение на изменение ролей
-        //$auth->addChild($role_manager, $articleFullAccess);//даем заместителю полный доступ к статьям
-        //$auth->addChild($role_deputy, $role_manager);//заместитель наследует менеджера
-        //$auth->addChild($role_superuser, $role_deputy);//главный наследует заместителя
         $auth->addChild($role_superuser, $changeAllRoles);//главный может менять все роли
         $auth->addChild($role_superuser, $createRole);//главный может создавать новые роли
         $auth->assign($role_superuser, $user->getId());//привязка роли Главного к суперпользователю
-
-
-
-        //$auth->assign($role_deputy, $user_deputy->getId());
-        //$auth->assign($role_manager, $user_manager->getId());
 
         /* Создаю роль по умолчанию */
         $role_default = $auth->createRole('Default');

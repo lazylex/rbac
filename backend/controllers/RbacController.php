@@ -42,7 +42,7 @@ class RbacController extends Controller
     public function actionIndex()
     {
         $role_count = count(\Yii::$app->authManager->getRoles());
-        $user_count = (new Query())->select('id')->from('user')->count();
+        $user_count = User::find()->count();
         $auth_assignment_count = AuthAssignment::find()->count();
         $auth_item_count = AuthItem::find()->count();
         $auth_item_child_count = AuthItemChild::find()->count();
