@@ -47,7 +47,6 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
 
                 foreach ($userPrivatePermissions as $permission) {
                     if ($as->isPermission($permission)) {
-                        //  $userPrivatePermissions[] = $permission;
                         $treeBuilder->tree = $as->getTree($permission);
                     }
                 }
@@ -81,7 +80,10 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                                 <input name="private_permissions[]"
                                        type="checkbox"
                                        value="<?= $permission_name ?>"
-                                    <?= in_array($permission_name, $userPrivatePermissions) ? 'checked="checked"' : '' ?>>
+                                    <?= in_array($permission_name, $userPrivatePermissions) ? 'checked="checked"' : '' ?>
+                                    <?= ($permission_name=='changeRole'||$permission_name=='createRole')
+                                    &&!\Yii::$app->user->can('changeAllRoles')?'disabled="disabled"':''?>
+                                >
                             </td>
                             <td>
                                 <input type="checkbox" disabled="disabled"
@@ -118,7 +120,7 @@ if (!\Yii::$app->user->can('changeAllRoles') && !\Yii::$app->user->can('changeRo
                                        value="<?= $role_name ?>"
                                        type="<?= $roles_selector_type ?>"
                                     <?= in_array($role_name, $userRoles) ? 'checked="checked"' : '' ?>
-                                    <?php if ($role_name == 'Главный' && (!\Yii::$app->user->can('changeAllRoles')))
+                                    <?php if (($role_name == 'Главный'||$role_name == 'Заместитель') && (!\Yii::$app->user->can('changeAllRoles')))
                                         echo 'disabled="disabled"';
                                     ?>
                                 >

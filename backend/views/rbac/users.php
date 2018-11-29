@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'href' => \yii\helpers\Url::to(['user']),
                         'data' => [
                             'method' => 'post',
-                            'params' => ['id' => $user['id']], // <- extra level
+                            'params' => ['id' => $user['id']],
                         ],]);
             } else {
                 $change_user = Html::tag('button', '<span class="glyphicon glyphicon-ban-circle"></span> Редактировать', ['class' => 'btn', 'disabled' => 'true']);

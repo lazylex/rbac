@@ -80,7 +80,6 @@ class RbacController extends Controller
                 ]);
 
         if ($model->load(\Yii::$app->request->post()) && $model->validate()) {
-            // проводим любые действия
             $as = AuthSingleton::getInstance();
             $auth = \Yii::$app->authManager;
             $new_role = $auth->createRole($model->name);

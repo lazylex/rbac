@@ -31,6 +31,6 @@ $this->params['breadcrumbs'][] = $this->title;
     </li>
     <li class="list-group-item">
         <span class="badge"><?= $auth_rule_count ?></span>
-        <a href="<?= Url::to(['/auth-rule']) ?>">auth_rule</a>
+        <a href="#">auth_rule</a>
     </li>
 </ul>

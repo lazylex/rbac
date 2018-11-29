@@ -70,7 +70,7 @@ class m181110_063522_init_superuser_and_main_roles extends Migration
         $auth->add($changeRoleRule);
         /* Создаю разрешение на изменение всех ролей, кроме главного */
         $changeRole = $auth->createPermission('changeRole');
-        $changeRole->description = 'Может изменять все роли, кроме роли Главного';
+        $changeRole->description = 'Может изменять все роли, кроме роли Главного и Заместителя';
         $changeRole->ruleName = $changeRoleRule->name;
         $auth->add($changeRole);
 
@@ -86,33 +86,46 @@ class m181110_063522_init_superuser_and_main_roles extends Migration
         $role_superuser->description = 'Суперпользователь';
         $auth->add($role_superuser);
 
-        /* Создаю роль заместителя */
+        /* Создаю роль заместителя
         $role_deputy = $auth->createRole('Заместитель');
         $role_deputy->description = 'Заместитель';
-        $auth->add($role_deputy);
+        $auth->add($role_deputy);*/
 
-        /* Создаю роль менеджера */
+        /* Создаю роль менеджера
         $role_manager = $auth->createRole('Менеджер');
         $role_manager->description = 'Менеджер';
-        $auth->add($role_manager);
+        $auth->add($role_manager);*/
 
-        $auth->addChild($role_deputy, $createRole);//даем заместителю разрешение на создание ролей
-        $auth->addChild($role_deputy, $changeRole);//даем заместителю разрешение на изменение ролей
-        $auth->addChild($role_manager, $articleFullAccess);//даем заместителю полный доступ к статьям
-        $auth->addChild($role_deputy, $role_manager);//заместитель наследует менеджера
-        $auth->addChild($role_superuser, $role_deputy);//главный наследует заместителя
+        // добавляем правило, определяющее, является ли пользователь автором
+        $changeArticleRule = new \backend\rules\changeArticleRule();
+        $auth->add($changeArticleRule);
+
+        // добавляем разрешение "changeOwnArticle" и привязываем к нему правило.
+        $changeOwnArticle = $auth->createPermission('changeOwnArticle');
+        $changeOwnArticle->description = 'Может менять свои посты';
+        $changeOwnArticle->ruleName = $changeArticleRule->name;
+        $auth->add($changeOwnArticle);
+
+        //$auth->addChild($role_deputy, $createRole);//даем заместителю разрешение на создание ролей
+        //$auth->addChild($role_deputy, $changeRole);//даем заместителю разрешение на изменение ролей
+        //$auth->addChild($role_manager, $articleFullAccess);//даем заместителю полный доступ к статьям
+        //$auth->addChild($role_deputy, $role_manager);//заместитель наследует менеджера
+        //$auth->addChild($role_superuser, $role_deputy);//главный наследует заместителя
         $auth->addChild($role_superuser, $changeAllRoles);//главный может менять все роли
+        $auth->addChild($role_superuser, $createRole);//главный может создавать новые роли
         $auth->assign($role_superuser, $user->getId());//привязка роли Главного к суперпользователю
 
 
 
-        $auth->assign($role_deputy, $user_deputy->getId());
-        $auth->assign($role_manager, $user_manager->getId());
+        //$auth->assign($role_deputy, $user_deputy->getId());
+        //$auth->assign($role_manager, $user_manager->getId());
 
         /* Создаю роль по умолчанию */
         $role_default = $auth->createRole('Default');
         $role_default->description = 'Роль по умолчанию. Не содержит разрешений';
         $auth->add($role_default);
+        $auth->assign($role_default, $user_deputy->getId());
+        $auth->assign($role_default, $user_manager->getId());
     }
 
     /**

@@ -22,10 +22,12 @@ $num = 1;
                 <td><?= $num++ ?></td>
                 <td>
                     <?php
-                    if ($role != 'Главный'):?>
+                    /* Роли Главный и Заместитель может редактировать только пользователь с ролью Главный */
+                    if ($role != 'Главный'&&$role!='Заместитель'):?>
                         <a class="btn btn-primary" style="width: 200px; text-align: left"
-                        <?= $role == 'Default' ? 'disabled="disabled">' : 'href="' . \yii\helpers\Url::to(['rbac/role', 'name' => $role]) . '">' ?>
-
+                        <?php
+                        /* Роль без разрешений Default не должна редактироваться вообще никем */
+                        echo $role == 'Default' ? 'disabled="disabled">' : 'href="' . \yii\helpers\Url::to(['rbac/role', 'name' => $role]) . '">' ?>
                         <span class="glyphicon glyphicon-pencil"></span> <?= $role ?>
                         </a>
                     <?php elseif (\Yii::$app->user->can('changeAllRoles')): ?>
@@ -42,7 +44,8 @@ $num = 1;
                 <td><?= $role_descr_and_rule['rule'] ?></td>
             </tr>
 
-        <?php endforeach; ?>
+        <?php endforeach;
+        if(\Yii::$app->user->can('createRole')):?>
         <tr>
             <td></td>
             <td>
@@ -50,5 +53,6 @@ $num = 1;
                    href="<?= \yii\helpers\Url::to(['rbac/create-role']) ?>">Создать новую роль</a>
             </td>
         </tr>
+        <?php endif;?>
     </table>
 </div>

@@ -8,14 +8,14 @@ class changeRoleRule extends Rule
 {
     public $name = "ChangeRole";
 
-    /* Проверяем, не пытаются ли редактировать роль главного */
+    /* Проверяем, не пытаются ли редактировать роль Главного или Заместителя*/
     public function execute($user, $item, $params)
     {
 
         if (isset($params['roles'])) {
 
             foreach ($params['roles'] as $role)
-                if ($role == 'Главный')
+                if ($role == 'Главный'||$role == 'Заместитель')
                     return false;
         }
         else
