@@ -14,24 +14,8 @@ use yii\helpers\Html;
  */
 class TreeBuilder
 {
-    public $auth_item=[];
+    public $auth_item = [];
     public $tree = [];
-
-    /**
-     * Конструктор, заполняет таблицу ролей и прав
-     */
-    public function __construct()
-    {
-        /*$auth_items = AuthItem::find()->select(['name', 'type', 'rule_name', 'description'])->asArray()->all();
-        foreach ($auth_items as $auth_item) {
-            $this->auth_item[$auth_item['name']] =
-                [
-                    'type' => $auth_item['type'],
-                    'rule_name' => $auth_item['rule_name'],
-                    'description' => $auth_item['description']
-                ];
-        }*/
-    }
 
     /**
      * Построитель дерева в виде массива
@@ -39,8 +23,8 @@ class TreeBuilder
      */
     public function BuildTree($parent)
     {
-        $this->tree=[];
-        if($this->isRole($parent))
+        $this->tree = [];
+        if ($this->isRole($parent))
             $this->tree['roles'][$parent] = $this->getChildrenRolesAndPermissions($parent);
         else
             $this->tree['permissions'][$parent] = $this->getChildrenRolesAndPermissions($parent);
@@ -57,37 +41,37 @@ class TreeBuilder
 
         $result .= '<ul class="" style="margin: 0">';
         if (isset($tree['permissions'])) {
-            foreach ($tree['permissions'] as $key =>$perm) {
+            foreach ($tree['permissions'] as $key => $perm) {
 
-                $result .=Html::tag('li',
-                    Html::tag('span','',['class'=>'glyphicon glyphicon-lock']).' '
-                    .Html::a($key.' ' ,'permission',
+                $result .= Html::tag('li',
+                    Html::tag('span', '', ['class' => 'glyphicon glyphicon-lock']) . ' '
+                    . Html::a($key . ' ', 'permission',
                         [
                             'data' => [
                                 'method' => 'post',
-                                'params' => ['name'=>$key],
+                                'params' => ['name' => $key],
                             ]
                         ])
-                    .Html::tag('span',$this->auth_item[$key]['description'],['class'=>'label label-info'])
-                    ,['class'=>'list-group-item list-group-item-info']);
+                    . Html::tag('span', $this->auth_item[$key]['description'], ['class' => 'label label-info'])
+                    , ['class' => 'list-group-item list-group-item-info']);
                 $result .= $this->buildList($perm);
             }
         }
 
         if (isset($tree['roles'])) {
-            foreach ($tree['roles'] as $key =>$role) {
+            foreach ($tree['roles'] as $key => $role) {
 
-                $result .=Html::tag('li',
-                    Html::tag('span','',['class'=>'glyphicon glyphicon-user']).' '
-                    .Html::a($key.' ' ,'role',
+                $result .= Html::tag('li',
+                    Html::tag('span', '', ['class' => 'glyphicon glyphicon-user']) . ' '
+                    . Html::a($key . ' ', 'role',
                         [
                             'data' => [
                                 'method' => 'post',
-                                'params' => ['name'=>$key],
+                                'params' => ['name' => $key],
                             ]
                         ])
-                    .Html::tag('span',$this->auth_item[$key]['description'],['class'=>'label label-success'])
-                    ,['class'=>'list-group-item list-group-item-success']);
+                    . Html::tag('span', $this->auth_item[$key]['description'], ['class' => 'label label-success'])
+                    , ['class' => 'list-group-item list-group-item-success']);
                 $result .= $this->buildList($role);
             }
         }
@@ -153,5 +137,4 @@ class TreeBuilder
         $children = AuthItemChild::find()->select('child')->where(['parent' => $parent])->asArray()->all();
         return count($children) == 0 ? null : $children;
     }
-
 }

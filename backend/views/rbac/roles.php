@@ -8,7 +8,6 @@ $this->params['breadcrumbs'][] = $this->title;
 $num = 1;
 ?>
 <div style="background: white; width: 50%; margin: auto">
-
     <table class="table">
         <thead class="thead-default">
         <tr>
